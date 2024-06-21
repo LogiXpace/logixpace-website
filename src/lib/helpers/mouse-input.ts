@@ -10,16 +10,14 @@ export class MouseInput {
 	prevMouseUpPosition = new Vector2D();
 	mouseUpPosition = new Vector2D();
 
-	prevMouseScrollPosition = new Vector2D();
-	mouseScrollPosition = new Vector2D();
-
-	deltaMouseDownMovePosition = new Vector2D();
+	prevMouseWheelPosition = new Vector2D();
+	mouseWheelPosition = new Vector2D();
 
 	isMouseDown = false;
 	isMouseMoving = false;
 	isMouseLeftDown = false;
 	isMouseRightDown = false;
-	isScrolling = false;
+	isWheeling = false;
 
 	constructor() {}
 
@@ -51,9 +49,6 @@ export class MouseInput {
 
 	handleMouseMove(mouseEvent: MouseEvent) {
 		this.prevMouseMovePosition.copy(this.mouseMovePosition);
-		this.deltaMouseDownMovePosition
-			.copy(this.mouseDownPosition)
-			.subVector(this.prevMouseDownPosition);
 
 		if (
 			this.prevMouseDownPosition.x === mouseEvent.offsetX &&
@@ -68,14 +63,14 @@ export class MouseInput {
 		this.isMouseMoving = true;
 	}
 
-	handleScroll(scrollEvent: WheelEvent) {
-		this.isScrolling = true;
-		this.prevMouseScrollPosition.copy(this.mouseScrollPosition);
-		this.mouseScrollPosition.x = scrollEvent.x;
-		this.mouseScrollPosition.x = scrollEvent.y;
+	handleWheel(WheelEvent: WheelEvent) {
+		this.isWheeling = true;
+		this.prevMouseWheelPosition.copy(this.mouseWheelPosition);
+		this.mouseWheelPosition.x = WheelEvent.x;
+		this.mouseWheelPosition.x = WheelEvent.y;
 	}
 
-	handleScrollEnd() {
-		this.isScrolling = false;
+	handleWheelEnd() {
+		this.isWheeling = false;
 	}
 }

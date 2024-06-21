@@ -1,15 +1,6 @@
 import { Vector2D } from './vector2d';
+import { clamp } from './math';
 
-/**
- *
- * @param {number} value
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-export function clamp(value, min, max) {
-	return Math.min(Math.max(value, min), max);
-}
 
 const DEFAULT_COLLIDER_TYPES = {
 	POINT_COLLIDER: 0,
