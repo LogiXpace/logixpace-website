@@ -1,13 +1,9 @@
-// import type { Pin } from "../core/pin";
-
-type Pin = any;
-
 export class NamedPin {
 	name: string;
-	backendPin: Pin;
+	powerState: number;
 
-	constructor(name: string, backendPin: Pin) {
+	constructor(name: string, powerState: number) {
 		this.name = name;
-		this.backendPin = backendPin;
+		this.powerState = powerState;
 	}
 }
