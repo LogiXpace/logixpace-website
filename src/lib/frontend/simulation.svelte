@@ -1,23 +1,19 @@
 <script context="module" lang="ts">
-	export interface Props {
-		scaleFactor: number;
-	}
+	import type { SimulationProps } from './simulation';
+
+	export type Props = Partial<Omit<SimulationProps, 'ctx'>>;
 </script>
 
 <script lang="ts">
 	import { Vector2D } from '$lib/helpers/vector2d';
 	import { onMount } from 'svelte';
-	// import { Pin as BackendPin } from '$lib/chim/core/pin';
-	import { SimulatuionEventEmitter } from './simulation-event';
-	import { BoxCollider } from '$lib/helpers/colliders';
-	import { CanvasStyle } from '$lib/helpers/canvas-style';
-	import { drawRectangle, drawCircle, drawLine, clearCanvas } from '$lib/helpers/draw';
-	import { HSL } from '$lib/helpers/color';
+	import { Simulation } from './simulation';
 
-	const { scaleFactor }: Props = $props();
+	const { offset = new Vector2D(), scale = 1, scaleFactor = 1 }: Props = $props();
 
 	let simulationElement: HTMLDivElement;
 	let canvas: HTMLCanvasElement;
+	let FPS = $state(0);
 
 	onMount(() => {
 		canvas.width = window.innerWidth;
@@ -33,66 +29,34 @@
 			canvas.height = window.innerHeight;
 		}
 
-		function handleMouseMove(e: MouseEvent) {}
+		const simulation = new Simulation({ ctx, offset, scale, scaleFactor });
 
 		window.addEventListener('resize', handleResize);
 
-		const pins: Pin[] = [];
+		let prevFrame = 0;
 
-		for (let i = 0; i < 100; i++) {
-			pins.push(
-				new Pin({
-					namedPin: {
-						name: 'pin',
-						pin: new BackendPin(0)
-					},
-					position: new Vector2D(i * 25, i * 25),
-					direction: new Vector2D(1, 0)
-				})
-			);
+		function animate() {
+			let currFrame = performance.now();
+			let delta = currFrame - prevFrame;
+			prevFrame = currFrame;
+			FPS = 3600 / delta;
+
+			simulation.draw();
+			requestAnimationFrame(animate);
 		}
 
-		const gridSize = 10;
-		const gridRadius = 1;
-
-		function draw(ctx: CanvasRenderingContext2D) {
-			clearCanvas(ctx);
-
-			for (let x = 0; x < canvas.width; x += gridSize) {
-				for (let y = 0; y < canvas.height; y += gridSize) {
-					drawCircle(
-						ctx,
-						x,
-						y,
-						gridRadius,
-						new CanvasStyle({
-							fillColor: new HSL(0, 0, 0.5)
-						})
-					);
-				}
-			}
-
-			for (let i = 0; i < pins.length; i++) {
-				const pin = pins[i];
-				pin.draw(ctx);
-			}
-		}
-
-		// Redraw shapes continuously
-		function animate(ctx: CanvasRenderingContext2D) {
-			draw(ctx);
-			requestAnimationFrame(() => animate(ctx));
-		}
-
-		// Start animation
-		animate(ctx);
+		animate();
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			simulation.destroy();
 		};
 	});
 </script>
 
 <div class="h-full w-full" bind:this={simulationElement}>
 	<canvas bind:this={canvas}></canvas>
+	<div class="fixed left-0 top-0 m-2 text-sm font-semibold">
+		FPS: {FPS.toPrecision(3)}
+	</div>
 </div>

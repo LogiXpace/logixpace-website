@@ -3,5 +3,5 @@
 </script>
 
 <div class="h-screen w-screen">
-	<Simulation scaleFactor={1} />
+	<Simulation scale={1} />
 </div>

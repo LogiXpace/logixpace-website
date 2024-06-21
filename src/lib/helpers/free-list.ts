@@ -34,19 +34,19 @@ export class FreeList<T> {
 
 	insert(value: T): number {
 		this.size++;
-		
+
 		if (this.freeIndex === -1) {
 			const index = this.data.length;
 			this.data.push(value);
 			return index;
 		}
-		
+
 		const index = this.freeIndex;
 		this.freeIndex = this.data[index] as number;
 		this.data[index] = value;
 		return index;
 	}
-	
+
 	erase(index: number) {
 		this.size--;
 		this.data[index] = this.freeIndex as T;

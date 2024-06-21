@@ -360,7 +360,6 @@ export class QuadTree<T extends ColliderInterface> {
 			nextIndex: quadNode.valueNodeIndex
 		});
 
-
 		if (quadNode.valueNodeIndex !== -1) {
 			const prevQuadValueNode = this.quadValueNodes.get(quadNode.valueNodeIndex);
 			prevQuadValueNode.prevIndex = this.quadValueNodes.insert(quadValueNode);
@@ -520,7 +519,7 @@ export class QuadTree<T extends ColliderInterface> {
 			rootQuadNode.firstChildIndex + 3,
 			rootQuadNode.firstChildIndex + 2,
 			rootQuadNode.firstChildIndex + 1,
-			rootQuadNode.firstChildIndex,
+			rootQuadNode.firstChildIndex
 		];
 
 		while (processQuadNodeIndices.length > 0) {
@@ -746,7 +745,7 @@ export class QuadTree<T extends ColliderInterface> {
 	}
 
 	relocate(value: T) {
-		console.log("is colliding", value.isColliding(this.getRootNode().collider));
+		console.log('is colliding', value.isColliding(this.getRootNode().collider));
 		this.remove(value);
 		this.insert(value);
 	}

@@ -34,8 +34,8 @@ export class Pin {
 
 		this.direction = direction.clone();
 
-		this.eventDispatcher.addEmiiter("move");
-		this.eventDispatcher.addEmiiter("destroy");
+		this.eventDispatcher.addEmiiter('move');
+		this.eventDispatcher.addEmiiter('destroy');
 
 		this.outletLineCollider = new BoxCollider(
 			this.position,
@@ -53,7 +53,7 @@ export class Pin {
 
 	updateColliders() {
 		this.outletCollider.position = this.calculateOutletPosition();
-		
+
 		const result = calculateBoxFromTwoPoint(this.position, this.outletCollider.position);
 		this.outletLineCollider.position.copy(result.position);
 		this.outletCollider.width = result.width;
@@ -64,7 +64,7 @@ export class Pin {
 		this.position.addVector(delta);
 		this.updateColliders();
 
-		const movingEventEmitter = this.eventDispatcher.getEmitter("move");
+		const movingEventEmitter = this.eventDispatcher.getEmitter('move');
 		movingEventEmitter.emit(this);
 	}
 

@@ -1,7 +1,6 @@
 import { Vector2D } from './vector2d';
 import { clamp } from './math';
 
-
 const DEFAULT_COLLIDER_TYPES = {
 	POINT_COLLIDER: 0,
 	BOX_COLLIDER: 1,
