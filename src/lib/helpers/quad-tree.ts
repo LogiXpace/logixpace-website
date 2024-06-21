@@ -8,10 +8,6 @@ export function calculateDimension(width: number, height: number, level: number)
 	return new Vector2D(width * ratio, height * ratio);
 }
 
-export interface ColliderInterface {
-	isColliding(collider: Collider): boolean;
-}
-
 interface QuadNodeConstructor {
 	/**
 	 * where to start the index to find its children. 0 when has no children.
@@ -61,7 +57,7 @@ class QuadNode {
 	}
 
 	isLeaf(): boolean {
-		return this.firstChildIndex === 0 || this.count !== -1;
+		return this.firstChildIndex === 0 || this.isLastLevel();
 	}
 
 	isExceededCapacity(capacity: number) {
@@ -75,7 +71,7 @@ class QuadNode {
 
 interface QuadValueNodeConstructor {
 	/**
-	 * the valueIndex of the elemet node (external data can use it)
+	 * the index of the elemet node (external data can use it)
 	 */
 	valueIndex: number;
 
@@ -88,39 +84,41 @@ interface QuadValueNodeConstructor {
 	 * the next element node index
 	 */
 	prevIndex: number;
+
+	quadNodeIndex: number;
 }
 
 class QuadValueNode {
 	valueIndex: number;
 	nextIndex: number;
 	prevIndex: number;
+	quadNodeIndex: number;
 
-	constructor({ prevIndex, valueIndex, nextIndex }: QuadValueNodeConstructor) {
+	constructor({ prevIndex, valueIndex, nextIndex, quadNodeIndex }: QuadValueNodeConstructor) {
 		this.valueIndex = valueIndex;
 		this.nextIndex = nextIndex;
 		this.prevIndex = prevIndex;
+		this.quadNodeIndex = quadNodeIndex;
 	}
 
 	isPrevQuadNode(): boolean {
-		return this.prevIndex < 0;
-	}
-
-	getQuadNodeIndex(): number {
-		return Math.abs(this.prevIndex + 1);
+		return this.prevIndex === -1;
 	}
 }
 
 class QuadValue<T> {
 	value: T;
+	bound: BoxCollider;
 	nodeIndices: Set<number>;
 
-	constructor(value: T) {
+	constructor(value: T, bound: BoxCollider) {
 		this.value = value;
 		this.nodeIndices = new Set();
+		this.bound = bound;
 	}
 }
 
-export class QuadTree<T extends ColliderInterface> {
+export class QuadTree<T> {
 	private quadValues = new FreeList<QuadValue<T>>();
 	private quadNodes = new FreeList<QuadNode>();
 	private quadValueNodes = new FreeList<QuadValueNode>();
@@ -163,12 +161,14 @@ export class QuadTree<T extends ColliderInterface> {
 
 				const nextQuadValueNode = this.quadValueNodes.get(quadValueNode.nextIndex);
 				nextQuadValueNode.prevIndex = quadValueNode.prevIndex;
+
+				const quadNode = this.quadNodes.get(quadValueNode.quadNodeIndex);
+				quadNode.count--;
 			} else {
 				// case 2
-				const quadNodeIndex = quadValueNode.getQuadNodeIndex();
-				const quadNode = this.quadNodes.get(quadNodeIndex);
-
+				const quadNode = this.quadNodes.get(quadValueNode.quadNodeIndex);
 				quadNode.valueNodeIndex = quadValueNode.nextIndex;
+				quadNode.count--;
 
 				const nextQuadValueNode = this.quadValueNodes.get(quadValueNode.nextIndex);
 				nextQuadValueNode.prevIndex = quadValueNode.prevIndex;
@@ -176,14 +176,19 @@ export class QuadTree<T extends ColliderInterface> {
 		} else {
 			if (quadValueNode.isPrevQuadNode()) {
 				// case 3
-				const quadNodeIndex = quadValueNode.getQuadNodeIndex();
+				const quadNodeIndex = quadValueNode.quadNodeIndex;
 				const quadNode = this.quadNodes.get(quadNodeIndex);
-
+				
 				quadNode.valueNodeIndex = -1;
+				quadNode.count--;
 			} else {
 				// case 4
+
 				const prevQuadValueNode = this.quadValueNodes.get(quadValueNode.prevIndex);
 				prevQuadValueNode.nextIndex = -1;
+
+				const quadNode = this.quadNodes.get(quadValueNode.quadNodeIndex);
+				quadNode.count--;
 			}
 		}
 
@@ -237,16 +242,15 @@ export class QuadTree<T extends ColliderInterface> {
 	}
 
 	private transferValuesToChildren(quadNode: QuadNode) {
-		const processQueueQuadNode = new Queue<QuadNode>();
+		const processQuadNodes = new Queue<QuadNode>();
 		// enqueue the quad node
-		processQueueQuadNode.enqueue(quadNode);
+		processQuadNodes.enqueue(quadNode);
 
-		while (processQueueQuadNode.size > 0) {
+		while (processQuadNodes.size > 0) {
 			// dequeue the quad node
-			const processQuadNode = processQueueQuadNode.dequeue() as QuadNode;
+			const processQuadNode = processQuadNodes.dequeue() as QuadNode;
 			let quadValueNodeIndex = processQuadNode.valueNodeIndex;
 
-			processQuadNode.count = -1;
 			processQuadNode.valueNodeIndex = -1;
 
 			// loop through the quad value nodes
@@ -268,7 +272,7 @@ export class QuadTree<T extends ColliderInterface> {
 					const quadNode = this.quadNodes.get(quadNodeIndex);
 
 					// early return if the value is not colliding with the quad node
-					if (!quadValue.value.isColliding(quadNode.collider)) {
+					if (!quadValue.bound.isColliding(quadNode.collider)) {
 						continue;
 					}
 
@@ -277,9 +281,10 @@ export class QuadTree<T extends ColliderInterface> {
 						// case 2
 						// create a new quad value node
 						const newQuadValueNode = new QuadValueNode({
-							prevIndex: -quadNodeIndex - 1,
+							prevIndex: -1,
 							valueIndex: quadValueNode.valueIndex,
-							nextIndex: quadNode.valueNodeIndex
+							nextIndex: quadNode.valueNodeIndex,
+							quadNodeIndex
 						});
 
 						if (quadNode.valueNodeIndex !== -1) {
@@ -292,6 +297,8 @@ export class QuadTree<T extends ColliderInterface> {
 							// set the next index of the quad node
 							quadNode.valueNodeIndex = this.quadValueNodes.insert(newQuadValueNode);
 						}
+
+						quadValue.nodeIndices.add(quadNode.valueNodeIndex);
 					} else {
 						// case 1 if isAlreadUsed is false for the other 3 childs
 
@@ -303,6 +310,8 @@ export class QuadTree<T extends ColliderInterface> {
 						// backwardly reconnect the quad node
 						quadValueNode.nextIndex = quadNode.valueNodeIndex;
 						quadNode.valueNodeIndex = tempQuadValueNodeIndex;
+						quadValueNode.quadNodeIndex = quadNodeIndex;
+						quadValueNode.prevIndex = -1;
 
 						// mark the vale as used
 						isAlreadyUsed = true;
@@ -317,7 +326,7 @@ export class QuadTree<T extends ColliderInterface> {
 						this.createChildren(quadNode);
 
 						// enqueue the the quad node for later processing
-						processQueueQuadNode.enqueue(quadNode);
+						processQuadNodes.enqueue(quadNode);
 					}
 				}
 			}
@@ -341,27 +350,27 @@ export class QuadTree<T extends ColliderInterface> {
 		queueQuadNode.enqueue(this.quadNodes.get(index + 3)); // south west
 	}
 
-	private enqueueChildrenIndices(queueQuadNodeIndices: Queue<number>, index: number) {
-		// enqueue the children of the quad node
-		queueQuadNodeIndices.enqueue(index); // north east
-		queueQuadNodeIndices.enqueue(index + 1); // north west
-		queueQuadNodeIndices.enqueue(index + 2); // south east
-		queueQuadNodeIndices.enqueue(index + 3); // south west
-	}
-
 	private nodeInsert(quadNodeIndex: number, valueIndex: number) {
 		const quadNode = this.quadNodes.get(quadNodeIndex);
 		const quadValue = this.quadValues.get(valueIndex);
 
 		// create a quad value node
 		const quadValueNode = new QuadValueNode({
-			prevIndex: -quadNodeIndex - 1,
-			valueIndex: valueIndex,
-			nextIndex: quadNode.valueNodeIndex
+			prevIndex: -1,
+			valueIndex,
+			nextIndex: quadNode.valueNodeIndex,
+			quadNodeIndex
 		});
 
 		if (quadNode.valueNodeIndex !== -1) {
 			const prevQuadValueNode = this.quadValueNodes.get(quadNode.valueNodeIndex);
+			if (!(prevQuadValueNode instanceof QuadValueNode)) {
+				console.log("quad node", quadNodeIndex, quadNode)
+				console.log(prevQuadValueNode)
+				console.log(this)
+				throw new Error("erro time")
+			}
+
 			prevQuadValueNode.prevIndex = this.quadValueNodes.insert(quadValueNode);
 
 			// set the value node index of the quad node
@@ -382,131 +391,109 @@ export class QuadTree<T extends ColliderInterface> {
 		}
 	}
 
-	multipleRootInsert(quadValues: T[]): (-1 | number)[] {
-		const rootQuadNode = this.getRootNode();
-
-		const valueIndexes: (-1 | number)[] = new Array(quadValues.length);
-		let quadValueNodeIndex = -1;
-		let lastQuadValueNodeIndex = -1;
-		let count = 0;
-
-		for (let i = 0; i < quadValues.length; i++) {
-			const value = quadValues[i];
-			if (value.isColliding(rootQuadNode.collider)) {
-				const quadValue = new QuadValue(value);
-				const valueIndex = this.quadValues.insert(quadValue);
-				valueIndexes[i] = valueIndex;
-
-				const quadValueNode = new QuadValueNode({
-					prevIndex: 0,
-					valueIndex: valueIndex,
-					nextIndex: quadValueNodeIndex
-				});
-
-				if (quadValueNodeIndex === -1) {
-					lastQuadValueNodeIndex = this.quadValueNodes.insert(quadValueNode);
-					quadValueNodeIndex = lastQuadValueNodeIndex;
-				} else {
-					quadValueNode.prevIndex = quadValueNodeIndex;
-					quadValueNodeIndex = this.quadValueNodes.insert(quadValueNode);
-				}
-
-				quadValue.nodeIndices.add(quadValueNodeIndex);
-
-				count++;
-			}
-			{
-				valueIndexes[i] = -1;
-			}
-		}
-
-		if (count === 0) {
-			return valueIndexes;
-		}
-
-		if (rootQuadNode.isLeaf()) {
-			if (lastQuadValueNodeIndex !== -1) {
-				const lastQuadValueNode = this.quadValueNodes.get(lastQuadValueNodeIndex);
-				lastQuadValueNode.nextIndex = rootQuadNode.valueNodeIndex;
-
-				const prevQuadValueNode = this.quadValueNodes.get(rootQuadNode.valueNodeIndex);
-				prevQuadValueNode.prevIndex = lastQuadValueNodeIndex;
-			}
-
-			rootQuadNode.valueNodeIndex = quadValueNodeIndex;
-			rootQuadNode.count += count;
-
-			if (this.isQuadNodeExceededCapacity(rootQuadNode)) {
-				this.split(rootQuadNode);
-			}
-
-			return valueIndexes;
-		}
-
-		// const processQueueQuadNode = new Queue<QuadNode>();
-		// this.enqueueChildren(processQueueQuadNode, rootQuadNode.firstChildIndex);
-
-		// const processQueueQuadNodeValueIndex: number[] = [];
-		// processQueueQuadNodeValueIndex.push(quadValueNodeIndex);
-
+	multipleRootInsert(quadValues: T[]) {
+		// TODO: still in work of progress
+		// const rootQuadNode = this.getRootNode();
+		// const indexes: (-1 | number)[] = new Array(quadValues.length);
+		// let quadValueNodeIndex = -1;
+		// let lastQuadValueNodeIndex = -1;
+		// let count = 0;
+		// for (let i = 0; i < quadValues.length; i++) {
+		// 	const value = quadValues[i];
+		// 	if (value.isColliding(rootQuadNode.collider)) {
+		// 		const quadValue = new QuadValue(value);
+		// 		const index = this.quadValues.insert(quadValue);
+		// 		indexes[i] = index;
+		// 		const quadValueNode = new QuadValueNode({
+		// 			prevIndex: 0,
+		// 			index: index,
+		// 			nextIndex: quadValueNodeIndex
+		// 		});
+		// 		if (quadValueNodeIndex === -1) {
+		// 			lastQuadValueNodeIndex = this.quadValueNodes.insert(quadValueNode);
+		// 			quadValueNodeIndex = lastQuadValueNodeIndex;
+		// 		} else {
+		// 			quadValueNode.prevIndex = quadValueNodeIndex;
+		// 			quadValueNodeIndex = this.quadValueNodes.insert(quadValueNode);
+		// 		}
+		// 		quadValue.nodeIndices.add(quadValueNodeIndex);
+		// 		count++;
+		// 	}
+		// 	{
+		// 		indexes[i] = -1;
+		// 	}
+		// }
+		// if (count === 0) {
+		// 	return indexes;
+		// }
+		// if (rootQuadNode.isLeaf()) {
+		// 	if (lastQuadValueNodeIndex !== -1) {
+		// 		const lastQuadValueNode = this.quadValueNodes.get(lastQuadValueNodeIndex);
+		// 		lastQuadValueNode.nextIndex = rootQuadNode.valueNodeIndex;
+		// 		const prevQuadValueNode = this.quadValueNodes.get(rootQuadNode.valueNodeIndex);
+		// 		prevQuadValueNode.prevIndex = lastQuadValueNodeIndex;
+		// 	}
+		// 	rootQuadNode.valueNodeIndex = quadValueNodeIndex;
+		// 	rootQuadNode.count += count;
+		// 	if (this.isQuadNodeExceededCapacity(rootQuadNode)) {
+		// 		this.split(rootQuadNode);
+		// 	}
+		// 	return indexes;
+		// }
+		// const processQuadNodes = new Queue<QuadNode>();
+		// this.enqueueChildren(processQuadNodes, rootQuadNode.firstChildIndex);
+		// const processQuadNodeindexs: number[] = [];
+		// processQuadNodeindexs.push(quadValueNodeIndex);
 		// while (
-		//   processQueueQuadNode.size > 0 &&
-		//   processQueueQuadNodeValueIndex.length > 0
+		//   processQuadNodes.size > 0 &&
+		//   processQuadNodeindexs.length > 0
 		// ) {
-		//   const quadNode = processQueueQuadNode.dequeue() as QuadNode;
-
+		//   const quadNode = processQuadNodes.dequeue() as QuadNode;
 		//   if (!quadNode.isLeaf()) {
-		//     this.enqueueChildren(processQueueQuadNode, quadNode.firstChildIndex);
+		//     this.enqueueChildren(processQuadNodes, quadNode.firstChildIndex);
 		//     continue;
 		//   }
-
-		//   const quadValueNodeIndex = processQueueQuadNodeValueIndex.pop() as number;
+		//   const quadValueNodeIndex = processQuadNodeindexs.pop() as number;
 		//   let quadNodeCount = 0;
-
 		//   let tempQuadValueNodeIndex = quadValueNodeIndex;
 		//   while (tempQuadValueNodeIndex !== -1) {
 		//     const quadValueNode = this.quadValueNodes.get(tempQuadValueNodeIndex);
 		//     const value = this.quadValues.get(quadValueNode.valueIndex);
 		//     const nextQuadValueNodeIndex = quadValueNode.nextIndex;
-
 		//     if (value.isColliding(quadNode.collider)) {
 		//       quadValueNode.nextIndex = quadNode.valueNodeIndex;
 		//       quadNode.valueNodeIndex = tempQuadValueNodeIndex;
 		//       quadNodeCount++;
 		//     } else {
-		//       if (processQueueQuadNodeValueIndex.length === 0) {
+		//       if (processQuadNodeindexs.length === 0) {
 		//         quadNode.valueNodeIndex = -1;
 		//       } else {
-		//         const poppedQuadNodeValueIndex = processQueueQuadNodeValueIndex.pop() as number;
-		//         quadValueNode.nextIndex = poppedQuadNodeValueIndex;
+		//         const poppedQuadNodeindex = processQuadNodeindexs.pop() as number;
+		//         quadValueNode.nextIndex = poppedQuadNodeindex;
 		//       }
-
-		//       processQueueQuadNodeValueIndex.push(tempQuadValueNodeIndex);
+		//       processQuadNodeindexs.push(tempQuadValueNodeIndex);
 		//     }
-
 		//     tempQuadValueNodeIndex = nextQuadValueNodeIndex;
 		//   }
-
 		//   console.log(quadNodeCount)
 		//   quadNode.count += quadNodeCount;
 		//   // if (this.isQuadNodeExceededCapacity(quadNode)) {
 		//   //   this.split(quadNode);
 		//   // }
 		// }
-
-		return valueIndexes;
+		// return indexes;
 	}
 
-	insert(value: T): -1 | number {
+	insert(value: T, bound: BoxCollider): -1 | number {
 		const rootQuadNode = this.getRootNode();
 
 		// early return if the value is not colliding with the root quad node
-		if (!value.isColliding(rootQuadNode.collider)) {
+		if (!bound.isColliding(rootQuadNode.collider)) {
 			return -1;
 		}
 
 		// push the value to the quadValues array and get the value index
-		const valueIndex = this.quadValues.insert(new QuadValue(value));
+		const valueIndex = this.quadValues.insert(new QuadValue(value, bound));
 
 		// check if the root node is a leaf itself
 		if (rootQuadNode.isLeaf()) {
@@ -528,7 +515,7 @@ export class QuadTree<T extends ColliderInterface> {
 			const quadNode = this.quadNodes.get(quadNodeIndex);
 
 			// check is it colldiing with the quad node
-			if (!value.isColliding(quadNode.collider)) {
+			if (!bound.isColliding(quadNode.collider)) {
 				continue;
 			}
 
@@ -556,11 +543,11 @@ export class QuadTree<T extends ColliderInterface> {
 		let quadValueNodeIndex = quadNode.valueNodeIndex;
 		while (quadValueNodeIndex !== -1) {
 			const quadValueNode = this.quadValueNodes.get(quadValueNodeIndex);
-			const value = this.quadValues.get(quadValueNode.valueIndex).value;
+			const quadValue = this.quadValues.get(quadValueNode.valueIndex);
 
 			// check if the value is colliding with the collider
-			if (value.isColliding(collider)) {
-				quadValues.push(value);
+			if (quadValue.bound.isColliding(collider)) {
+				quadValues.push(quadValue.value);
 			}
 
 			// set the next index of the current quad value node
@@ -570,14 +557,14 @@ export class QuadTree<T extends ColliderInterface> {
 		return quadValues;
 	}
 
-	private removeQuadValue(quadValueIndex: number) {
-		const quadValue = this.quadValues.get(quadValueIndex);
+	private removeQuadValue(quadindex: number) {
+		const quadValue = this.quadValues.get(quadindex);
 
 		for (const quadValueNodeIndex of quadValue.nodeIndices) {
 			this.removeQuadValueNode(quadValueNodeIndex);
 		}
 
-		this.quadValues.erase(quadValueIndex);
+		this.quadValues.erase(quadindex);
 	}
 
 	private nodeRemoveValue(quadNode: QuadNode, value: T) {
@@ -591,7 +578,6 @@ export class QuadTree<T extends ColliderInterface> {
 			if (value === quadValue) {
 				// remove the value
 				this.removeQuadValue(quadValueNode.valueIndex);
-				quadNode.count--;
 				return;
 			}
 
@@ -603,14 +589,14 @@ export class QuadTree<T extends ColliderInterface> {
 	queryByPoint(pointCollider: PointCollider): T | undefined {
 		const rootQuadNode = this.getRootNode();
 
-		const processQueueQuadNode = new Queue<QuadNode>();
+		const processQuadNodes = new Queue<QuadNode>();
 
 		// enqueue the root quad node
-		processQueueQuadNode.enqueue(rootQuadNode);
+		processQuadNodes.enqueue(rootQuadNode);
 
-		while (processQueueQuadNode.size > 0) {
+		while (processQuadNodes.size > 0) {
 			// dequeue the quad node
-			const quadNode = processQueueQuadNode.dequeue() as QuadNode;
+			const quadNode = processQuadNodes.dequeue() as QuadNode;
 
 			// check is it colldiing with the quad node
 			if (!pointCollider.isColliding(quadNode.collider)) {
@@ -623,7 +609,7 @@ export class QuadTree<T extends ColliderInterface> {
 			}
 
 			// enqueue the children of the quad node
-			this.enqueueChildren(processQueueQuadNode, quadNode.firstChildIndex);
+			this.enqueueChildren(processQuadNodes, quadNode.firstChildIndex);
 		}
 
 		return undefined;
@@ -632,22 +618,23 @@ export class QuadTree<T extends ColliderInterface> {
 	query(collider: Collider): Set<T> {
 		const rootQuadNode = this.getRootNode();
 
-		const processQueueQuadNode = new Queue<QuadNode>();
+		const processQuadNodes = new Queue<QuadNode>();
 
 		// enqueue the root quad node
-		processQueueQuadNode.enqueue(rootQuadNode);
+		processQuadNodes.enqueue(rootQuadNode);
 
 		let quadValues = new Set<T>();
 
-		while (processQueueQuadNode.size > 0) {
+		
+		while (processQuadNodes.size > 0) {
 			// dequeue the quad node
-			const quadNode = processQueueQuadNode.dequeue() as QuadNode;
-
+			const quadNode = processQuadNodes.dequeue() as QuadNode;
+			
 			// check is it colldiing with the quad node
 			if (!collider.isColliding(quadNode.collider)) {
 				continue;
 			}
-
+			
 			// check if it is a leaf
 			if (quadNode.isLeaf()) {
 				quadValues = quadValues.union(new Set(this.getCollidingValues(quadNode, collider)));
@@ -655,13 +642,16 @@ export class QuadTree<T extends ColliderInterface> {
 			}
 
 			// enqueue the children of the quad node
-			this.enqueueChildren(processQueueQuadNode, quadNode.firstChildIndex);
+			processQuadNodes.enqueue(this.quadNodes.get(quadNode.firstChildIndex));
+			processQuadNodes.enqueue(this.quadNodes.get(quadNode.firstChildIndex + 1));
+			processQuadNodes.enqueue(this.quadNodes.get(quadNode.firstChildIndex + 2));
+			processQuadNodes.enqueue(this.quadNodes.get(quadNode.firstChildIndex + 3));
 		}
 
 		return quadValues;
 	}
 
-	remove(value: T) {
+	remove(value: T, bound: BoxCollider) {
 		const rootQuadNode = this.getRootNode();
 		const processQuadNode: QuadNode[] = [];
 
@@ -673,7 +663,7 @@ export class QuadTree<T extends ColliderInterface> {
 			const quadNode = processQuadNode.pop() as QuadNode;
 
 			// check is it colldiing with the quad node
-			if (!value.isColliding(quadNode.collider)) {
+			if (!bound.isColliding(quadNode.collider)) {
 				continue;
 			}
 
@@ -742,11 +732,5 @@ export class QuadTree<T extends ColliderInterface> {
 			processQuadNodes.push(this.quadNodes.get(quadNode.firstChildIndex + 2)); // south east
 			processQuadNodes.push(this.quadNodes.get(quadNode.firstChildIndex + 3)); // south west
 		}
-	}
-
-	relocate(value: T) {
-		console.log('is colliding', value.isColliding(this.getRootNode().collider));
-		this.remove(value);
-		this.insert(value);
 	}
 }
