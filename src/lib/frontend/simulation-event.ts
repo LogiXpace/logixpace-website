@@ -1,8 +1,11 @@
-type SimulationEvent<T> = T;
+type SimulationEvent<T> = {
+	id: string;
+	data: T
+}
 
 type SimulationEventCallback<T> = (event: SimulationEvent<T>) => void;
 
-export class SimulationEventReceiver<T> {
+export class SimulationEventListener<T> {
 	private callback: SimulationEventCallback<T> | undefined = undefined;
 
 	constructor(callback: SimulationEventCallback<T>) {
@@ -25,25 +28,56 @@ export class SimulationEventReceiver<T> {
 }
 
 export class SimulatuionEventEmitter<T> {
-	private receivers = new Set<SimulationEventReceiver<T>>();
+	private id: string;
+	private listeners = new Set<SimulationEventListener<T>>();
 
-	constructor() {}
-
-	addReceiver(receiver: SimulationEventReceiver<T>) {
-		this.receivers.add(receiver);
+	constructor(id: string) {
+		this.id = id;
 	}
 
-	deleteReceiver(receiver: SimulationEventReceiver<T>) {
-		this.receivers.delete(receiver);
+	bind(listener: SimulationEventListener<T>) {
+		this.listeners.add(listener);
 	}
 
-	emit(event: SimulationEvent<T>) {
-		for (const receiver of this.receivers) {
-			if (receiver.isDestroyed()) {
-				this.receivers.delete(receiver);
+	delete(listener: SimulationEventListener<T>) {
+		this.listeners.delete(listener);
+	}
+
+	emit(data: T) {
+		const event: SimulationEvent<T> = {
+			id: this.id,
+			data
+		}
+
+		for (const listener of this.listeners) {
+			if (listener.isDestroyed()) {
+				this.listeners.delete(listener);
 			} else {
-				receiver.recieve(event);
+				listener.recieve(event);
 			}
 		}
+	}
+}
+
+export class SimulationEventDispatcher {
+	private emiiters = new Map<string, SimulatuionEventEmitter<any>>();
+
+	constructor() {
+
+	}
+
+	getEmitter(id: string) {
+		return this.emiiters.get(id);
+	}
+
+	addEmiiter(id: string): SimulatuionEventEmitter<any> {
+		if (this.emiiters.has(id)) {
+			throw new Error("emiiter already has the emiiter specifically set");
+		}
+
+		const emiiter = new SimulatuionEventEmitter(id);
+		this.emiiters.set(id, emiiter);
+
+		return emiiter;
 	}
 }
