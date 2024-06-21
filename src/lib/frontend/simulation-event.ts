@@ -1,7 +1,7 @@
 type SimulationEvent<T> = {
 	id: string;
-	data: T
-}
+	data: T;
+};
 
 type SimulationEventCallback<T> = (event: SimulationEvent<T>) => void;
 
@@ -27,7 +27,7 @@ export class SimulationEventListener<T> {
 	}
 }
 
-export class SimulatuionEventEmitter<T> {
+export class SimulationEventEmitter<T> {
 	private id: string;
 	private listeners = new Set<SimulationEventListener<T>>();
 
@@ -47,7 +47,7 @@ export class SimulatuionEventEmitter<T> {
 		const event: SimulationEvent<T> = {
 			id: this.id,
 			data
-		}
+		};
 
 		for (const listener of this.listeners) {
 			if (listener.isDestroyed()) {
@@ -60,22 +60,20 @@ export class SimulatuionEventEmitter<T> {
 }
 
 export class SimulationEventDispatcher {
-	private emiiters = new Map<string, SimulatuionEventEmitter<any>>();
+	private emiiters = new Map<string, SimulationEventEmitter<any>>();
 
-	constructor() {
-
-	}
+	constructor() {}
 
 	getEmitter(id: string) {
 		return this.emiiters.get(id);
 	}
 
-	addEmiiter(id: string): SimulatuionEventEmitter<any> {
+	addEmiiter(id: string): SimulationEventEmitter<any> {
 		if (this.emiiters.has(id)) {
-			throw new Error("emiiter already has the emiiter specifically set");
+			throw new Error('emiiter already has the emiiter specifically set');
 		}
 
-		const emiiter = new SimulatuionEventEmitter(id);
+		const emiiter = new SimulationEventEmitter(id);
 		this.emiiters.set(id, emiiter);
 
 		return emiiter;
