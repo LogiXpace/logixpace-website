@@ -1,11 +1,12 @@
 import { NamedPin } from './named-pin';
 import { Vector2D } from '$lib/helpers/vector2d';
-import { SimulatuionEventEmitter } from './simulation-event';
-import { BoxCollider } from '$lib/helpers/colliders';
+import { SimulationEventDispatcher, SimulationEventEmitter } from './simulation-event';
+import { BoxCollider, Collider } from '$lib/helpers/colliders';
 import { DEFUALTS } from './defaults';
 import { CanvasStyle } from '$lib/helpers/canvas-style';
 import { drawLine, drawRectangle } from '$lib/helpers/draw';
 import { HSL } from '$lib/helpers/color';
+import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
 
 export interface PinProps {
 	position: Vector2D;
@@ -20,8 +21,7 @@ export class Pin {
 	isSelected = false;
 	isHovering = false;
 
-	destroyEventEmitter = new SimulatuionEventEmitter<Pin>();
-	movingEventEmitter = new SimulatuionEventEmitter<Pin>();
+	eventDispatcher = new SimulationEventDispatcher();
 
 	direction: Vector2D;
 
@@ -33,6 +33,9 @@ export class Pin {
 		this.position = position.clone();
 
 		this.direction = direction.clone();
+
+		this.eventDispatcher.addEmiiter("move");
+		this.eventDispatcher.addEmiiter("destroy");
 
 		this.outletLineCollider = new BoxCollider(
 			this.position,
@@ -48,6 +51,23 @@ export class Pin {
 		);
 	}
 
+	updateColliders() {
+		this.outletCollider.position = this.calculateOutletPosition();
+		
+		const result = calculateBoxFromTwoPoint(this.position, this.outletCollider.position);
+		this.outletLineCollider.position.copy(result.position);
+		this.outletCollider.width = result.width;
+		this.outletCollider.height = result.height;
+	}
+
+	move(delta: Vector2D) {
+		this.position.addVector(delta);
+		this.updateColliders();
+
+		const movingEventEmitter = this.eventDispatcher.getEmitter("move");
+		movingEventEmitter.emit(this);
+	}
+
 	calculateOutletPosition() {
 		return this.position
 			.clone()
@@ -55,12 +75,10 @@ export class Pin {
 			.subScalar(DEFUALTS.PIN_OUTLET_SIZE / 2);
 	}
 
-	calculateOutletCenterPosition() {
-		return this.outletCollider.position.clone().addScalar(DEFUALTS.PIN_OUTLET_SIZE / 2);
-	}
-
 	draw(ctx: CanvasRenderingContext2D) {
-		const outletCenterPosiion = this.calculateOutletCenterPosition();
+		const outletCenterPosiion = this.outletCollider.position
+			.clone()
+			.addScalar(DEFUALTS.PIN_OUTLET_SIZE / 2);
 
 		drawLine(
 			ctx,
@@ -84,5 +102,9 @@ export class Pin {
 				fillColor: new HSL(0, 0, 0.5)
 			})
 		);
+	}
+
+	isColliding(collider: Collider) {
+		return this.outletCollider.isColliding(collider) || this.outletCollider.isColliding(collider);
 	}
 }
