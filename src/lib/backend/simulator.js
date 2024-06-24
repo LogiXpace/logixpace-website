@@ -1,4 +1,4 @@
-import { Queue } from '../../helpers/queue';
+import { Queue } from '$lib/helpers/queue';
 
 export class Simulator {
 	constructor() {
