@@ -1,73 +1,73 @@
 import { Vector2D } from './vector2d';
 
 export class MouseInput {
-	prevMouseMovePosition = new Vector2D();
-	mouseMovePosition = new Vector2D();
+	prevMovePosition = new Vector2D();
+	movePosition = new Vector2D();
 
-	prevMouseDownPosition = new Vector2D();
-	mouseDownPosition = new Vector2D();
+	prevDownPosition = new Vector2D();
+	downPosition = new Vector2D();
 
-	prevMouseUpPosition = new Vector2D();
-	mouseUpPosition = new Vector2D();
+	prevUpPosition = new Vector2D();
+	upPosition = new Vector2D();
 
-	prevMouseWheelPosition = new Vector2D();
-	mouseWheelPosition = new Vector2D();
+	prevwheelPosition = new Vector2D();
+	wheelPosition = new Vector2D();
 
-	isMouseDown = false;
-	isMouseMoving = false;
-	isMouseLeftDown = false;
-	isMouseRightDown = false;
+	isDown = false;
+	isMoving = false;
+	isLeftDown = false;
+	isRightDown = false;
 	isWheeling = false;
 
 	constructor() {}
 
 	handleMouseDown(mouseEvent: MouseEvent) {
-		this.isMouseDown = true;
-		this.prevMouseDownPosition.copy(this.mouseDownPosition);
-		this.mouseDownPosition.x = mouseEvent.offsetX;
-		this.mouseDownPosition.y = mouseEvent.offsetY;
+		this.isDown = true;
+		this.prevDownPosition.copy(this.downPosition);
+		this.downPosition.x = mouseEvent.offsetX;
+		this.downPosition.y = mouseEvent.offsetY;
 
 		if (mouseEvent.button === 0) {
-			this.isMouseLeftDown = true;
+			this.isLeftDown = true;
 		} else if (mouseEvent.button === 2) {
-			this.isMouseRightDown = true;
+			this.isRightDown = true;
 		}
 	}
 
 	handleMouseUp(mouseEvent: MouseEvent) {
-		this.isMouseDown = false;
-		this.prevMouseUpPosition.copy(this.mouseUpPosition);
-		this.mouseUpPosition.x = mouseEvent.offsetX;
-		this.mouseUpPosition.y = mouseEvent.offsetY;
+		this.isDown = false;
+		this.prevUpPosition.copy(this.upPosition);
+		this.upPosition.x = mouseEvent.offsetX;
+		this.upPosition.y = mouseEvent.offsetY;
 
 		if (mouseEvent.button === 0) {
-			this.isMouseLeftDown = false;
+			this.isLeftDown = false;
 		} else if (mouseEvent.button === 2) {
-			this.isMouseRightDown = false;
+			this.isRightDown = false;
 		}
 	}
 
 	handleMouseMove(mouseEvent: MouseEvent) {
-		this.prevMouseMovePosition.copy(this.mouseMovePosition);
+		this.prevMovePosition.copy(this.movePosition);
 
 		if (
-			this.prevMouseDownPosition.x === mouseEvent.offsetX &&
-			this.prevMouseDownPosition.y === mouseEvent.offsetY
+			this.prevDownPosition.x === mouseEvent.offsetX &&
+			this.prevDownPosition.y === mouseEvent.offsetY
 		) {
-			this.isMouseMoving = false;
+			this.isMoving = false;
 			return;
 		}
 
-		this.mouseMovePosition.x = mouseEvent.offsetX;
-		this.mouseMovePosition.y = mouseEvent.offsetY;
-		this.isMouseMoving = true;
+		this.movePosition.x = mouseEvent.offsetX;
+		this.movePosition.y = mouseEvent.offsetY;
+		this.isMoving = true;
 	}
 
 	handleWheel(WheelEvent: WheelEvent) {
 		this.isWheeling = true;
-		this.prevMouseWheelPosition.copy(this.mouseWheelPosition);
-		this.mouseWheelPosition.x = WheelEvent.x;
-		this.mouseWheelPosition.x = WheelEvent.y;
+		this.prevwheelPosition.copy(this.wheelPosition);
+		this.wheelPosition.x = WheelEvent.x;
+		this.wheelPosition.x = WheelEvent.y;
 	}
 
 	handleWheelEnd() {
