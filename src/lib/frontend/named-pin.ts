@@ -1,8 +1,13 @@
-export class NamedPin {
-	name: string;
-	powerState: number;
+import type { PowerState } from "./state";
 
-	constructor(name: string, powerState: number) {
+
+export class NamedPin {
+	id: number;
+	name: string;
+	powerState: PowerState;
+
+	constructor(id: number, name: string, powerState: PowerState) {
+		this.id = id;
 		this.name = name;
 		this.powerState = powerState;
 	}
