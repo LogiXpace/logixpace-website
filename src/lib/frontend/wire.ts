@@ -22,11 +22,7 @@ export class Wire {
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
 
-		this.collider = new LineCollider(
-			this.startPosition,
-			this.endPosition,
-			DEFUALTS.WIRE_WIDTH
-		);
+		this.collider = new LineCollider(this.startPosition, this.endPosition, DEFUALTS.WIRE_WIDTH);
 	}
 
 	updateCollider() {
@@ -43,10 +39,10 @@ export class Wire {
 			this.endPosition.y,
 			new CanvasStyle({
 				strokeColor: new RGB(100, 100, 100, 0.2),
-				lineWidth: DEFUALTS.WIRE_WIDTH,
+				lineWidth: DEFUALTS.WIRE_WIDTH
 			})
 		);
-		
+
 		drawLine(
 			ctx,
 			this.startPosition.x,

@@ -116,14 +116,22 @@ function collisionBetweenCircles(circle1: CircleCollider, circle2: CircleCollide
 	return length <= circle1.radius + circle2.radius;
 }
 
-function pointOnLineSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number) {
+function pointOnLineSegment(
+	px: number,
+	py: number,
+	x1: number,
+	y1: number,
+	x2: number,
+	y2: number
+) {
 	// Check if point (px, py) is on the line segment defined by (x1, y1) to (x2, y2)
 	const dx = x2 - x1;
 	const dy = y2 - y1;
 	const epsilon = 1e-6; // Small tolerance for floating point comparison
 
 	// Check if px and py are within the segment bounds
-	const onSegment = px >= Math.min(x1, x2) - epsilon &&
+	const onSegment =
+		px >= Math.min(x1, x2) - epsilon &&
 		px <= Math.max(x1, x2) + epsilon &&
 		py >= Math.min(y1, y2) - epsilon &&
 		py <= Math.max(y1, y2) + epsilon;
@@ -161,21 +169,18 @@ function collisionBetweenLines(line1: LineCollider, line2: LineCollider): boolea
 
 	if (denominator === 0) {
 		// Check if line1's start or end point is inside line2
-		if (pointOnLineSegment(x1, y1, x3, y3, x4, y4) ||
-			pointOnLineSegment(x2, y2, x3, y3, x4, y4)) {
+		if (pointOnLineSegment(x1, y1, x3, y3, x4, y4) || pointOnLineSegment(x2, y2, x3, y3, x4, y4)) {
 			return true;
 		}
 
 		// Check if line2's start or end point is inside line1
-		if (pointOnLineSegment(x3, y3, x1, y1, x2, y2) ||
-			pointOnLineSegment(x4, y4, x1, y1, x2, y2)) {
+		if (pointOnLineSegment(x3, y3, x1, y1, x2, y2) || pointOnLineSegment(x4, y4, x1, y1, x2, y2)) {
 			return true;
 		}
 
 		// Check if lines are coincident but do not overlap
 		return false;
 	}
-
 
 	// Calculate uA and uB
 	const t1 = (dx * dy2 - dy * dx2) / denominator;
@@ -339,11 +344,7 @@ function collisionBetweenBoxAndLine(box: BoxCollider, line: LineCollider) {
 
 	const right = collisionBetweenLines(
 		line,
-		new LineCollider(
-			new Vector2D(max.x, box.position.y),
-			new Vector2D(max.x, max.y),
-			1
-		)
+		new LineCollider(new Vector2D(max.x, box.position.y), new Vector2D(max.x, max.y), 1)
 	);
 
 	if (right) {
@@ -365,11 +366,7 @@ function collisionBetweenBoxAndLine(box: BoxCollider, line: LineCollider) {
 
 	const bottom = collisionBetweenLines(
 		line,
-		new LineCollider(
-			new Vector2D(box.position.x, max.y),
-			new Vector2D(max.x, max.y),
-			1
-		)
+		new LineCollider(new Vector2D(box.position.x, max.y), new Vector2D(max.x, max.y), 1)
 	);
 
 	if (bottom) {

@@ -49,7 +49,12 @@ export function calculateBoxTopLeftPositionFromCenterPosition(
 	return position;
 }
 
-export function getClosestPoint(point: Vector2D, start: Vector2D, end: Vector2D, thickness: number) {
+export function getClosestPoint(
+	point: Vector2D,
+	start: Vector2D,
+	end: Vector2D,
+	thickness: number
+) {
 	const v = end.clone().subVector(start);
 	const w = point.clone().subVector(start);
 

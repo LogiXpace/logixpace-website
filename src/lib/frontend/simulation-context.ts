@@ -92,26 +92,26 @@ export class SimulationContext {
 		const io1 = this.addIO({
 			namedPin: new NamedPin(0, 'test', 0),
 			position: new Vector2D(-100, 0),
-			direction: DIRECTION.RIGHT,
-		})
+			direction: DIRECTION.RIGHT
+		});
 
 		const io2 = this.addIO({
 			namedPin: new NamedPin(1, 'test', 0),
 			position: new Vector2D(100, 0),
 			direction: DIRECTION.LEFT
-		})
+		});
 
 		const io3 = this.addIO({
 			namedPin: new NamedPin(1, 'test', 0),
 			position: new Vector2D(0, 100),
 			direction: DIRECTION.TOP
-		})
+		});
 
 		const io4 = this.addIO({
 			namedPin: new NamedPin(1, 'test', 0),
 			position: new Vector2D(0, -100),
 			direction: DIRECTION.BOTTOM
-		})
+		});
 
 		this.queryAll();
 
@@ -127,12 +127,12 @@ export class SimulationContext {
 		this.wires = this.wireTree.query(screenCollider);
 		const end = performance.now();
 
-		console.group()
+		console.group();
 		console.log('querying time', end - start);
 		console.log('ios.size', this.ios.size);
 		console.log('wirePoints.size', this.wirePoints.size);
 		console.log('wires.size', this.wires.size);
-		console.groupEnd()
+		console.groupEnd();
 	}
 
 	getScreenCollider() {
@@ -148,7 +148,7 @@ export class SimulationContext {
 		this.ctx.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
 		this.ctx.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
 		this.ctx.canvas.addEventListener('wheel', this.handleWheel.bind(this));
-		this.ctx.canvas.addEventListener('dblclick', this.handleDblClick.bind(this))
+		this.ctx.canvas.addEventListener('dblclick', this.handleDblClick.bind(this));
 		window.addEventListener('keydown', this.handleKeyDown.bind(this));
 		window.addEventListener('keyup', this.handleKeyUp.bind(this));
 	}
@@ -176,7 +176,7 @@ export class SimulationContext {
 		this.ctx.canvas.removeEventListener('mouseup', this.handleMouseUp.bind(this));
 		this.ctx.canvas.removeEventListener('mousemove', this.handleMouseMove.bind(this));
 		this.ctx.canvas.removeEventListener('wheel', this.handleWheel.bind(this));
-		this.ctx.canvas.removeEventListener('dblclick', this.handleDblClick.bind(this))
+		this.ctx.canvas.removeEventListener('dblclick', this.handleDblClick.bind(this));
 		window.removeEventListener('keydown', this.handleKeyDown.bind(this));
 		window.removeEventListener('keyup', this.handleKeyUp.bind(this));
 	}
@@ -200,7 +200,12 @@ export class SimulationContext {
 			const wire = this.wireTree.queryByPoint(mouseCollider);
 			if (wire !== undefined) {
 				// get the closest point to the line
-				const closestPoint = getClosestPoint(mouseWorldPosition, wire.startPosition, wire.endPosition, DEFUALTS.WIRE_WIDTH);
+				const closestPoint = getClosestPoint(
+					mouseWorldPosition,
+					wire.startPosition,
+					wire.endPosition,
+					DEFUALTS.WIRE_WIDTH
+				);
 
 				// make two wires from the closest point
 				// one the half next to point and the other half
@@ -210,10 +215,10 @@ export class SimulationContext {
 				const halfWire1 = this.addWire({
 					startPosition: closestPoint,
 					endPosition: wire.endPosition
-				})
+				});
 
 				// wire that starts from its original start position and ends at the closest point
-				const halfWire2 = wire
+				const halfWire2 = wire;
 				halfWire2.endPosition = closestPoint;
 
 				// delete and insert again to update it in the quad tree
@@ -228,7 +233,7 @@ export class SimulationContext {
 				// make a new wire point on the closest point
 				const closestWirePoint = this.addWirePoint({
 					position: closestPoint // make sure it refrences the closest position
-				})
+				});
 
 				// add it to the scene to be able to be drawn
 				this.wirePoints.add(closestWirePoint);
@@ -242,14 +247,14 @@ export class SimulationContext {
 					// IMPORTANT: to clone instead of refrencing, because it may also modify
 					// other variables that refrenceing this position to changed when wire point pending is moving
 					position: closestPoint.clone()
-				})
+				});
 
 				// create a new wire that is connecting the closest wire point to the wire point pending
 				const connectedWirePending = new Wire({
 					// IMPORTANT: refrence instead of clone, to be autoamatically drawn properly whenever the refrences is changed
 					startPosition: closestPoint,
 					endPosition: this.wirePointPending.position
-				})
+				});
 
 				// add it to the scene to be drawn again
 				this.wires.add(connectedWirePending);
@@ -258,10 +263,9 @@ export class SimulationContext {
 				this.wirePointPending.addWire(connectedWirePending);
 
 				// also add it to the closest wire point (also connected)
-				closestWirePoint.addWire(connectedWirePending)
+				closestWirePoint.addWire(connectedWirePending);
 			}
 		}
-
 	}
 
 	endWireOn(position: Vector2D) {
@@ -285,13 +289,13 @@ export class SimulationContext {
 
 	createWireOn(position: Vector2D) {
 		this.wirePointPending = new WirePoint({
-			position: position.clone(),
-		})
+			position: position.clone()
+		});
 
 		const wire = new Wire({
 			startPosition: position,
 			endPosition: this.wirePointPending.position
-		})
+		});
 
 		if (this.hover !== undefined) {
 			this.hover.addWire(wire);
@@ -312,7 +316,12 @@ export class SimulationContext {
 					const wire = this.wireTree.queryByPoint(mouseCollider);
 					if (wire !== undefined) {
 						// get the closest point to the line
-						const closestPoint = getClosestPoint(mouseWorldPosition, wire.startPosition, wire.endPosition, DEFUALTS.WIRE_WIDTH);
+						const closestPoint = getClosestPoint(
+							mouseWorldPosition,
+							wire.startPosition,
+							wire.endPosition,
+							DEFUALTS.WIRE_WIDTH
+						);
 
 						// make two wires from the closest point
 						// one the half next to point and the other half
@@ -322,10 +331,10 @@ export class SimulationContext {
 						const halfWire1 = this.addWire({
 							startPosition: closestPoint,
 							endPosition: wire.endPosition
-						})
+						});
 
 						// wire that starts from its original start position and ends at the closest point
-						const halfWire2 = wire
+						const halfWire2 = wire;
 						halfWire2.endPosition = closestPoint;
 
 						// delete and insert again to update it in the quad tree
@@ -344,7 +353,7 @@ export class SimulationContext {
 						// set the wire point pending position as the closest point position
 						closestWirePoint.position = closestPoint;
 						closestWirePoint.updateCollider(); // update the collider to reflect the updated position.
-						this.wirePointTree.insert(closestWirePoint, closestWirePoint.collider) // add it into the qaud tree
+						this.wirePointTree.insert(closestWirePoint, closestWirePoint.collider); // add it into the qaud tree
 
 						// add it to the scene to be able to be drawn
 						this.wirePoints.add(closestWirePoint);
@@ -357,7 +366,6 @@ export class SimulationContext {
 						// add the half wires to the closest wire point
 						closestWirePoint.addWire(halfWire1);
 						closestWirePoint.addWire(halfWire2);
-
 					} else {
 						const reservedWirePoint = this.wirePointPending;
 
@@ -372,14 +380,14 @@ export class SimulationContext {
 
 						// create a new wire point
 						this.wirePointPending = new WirePoint({
-							position: reservedWirePoint.position.clone(),
-						})
+							position: reservedWirePoint.position.clone()
+						});
 
-						// a wire connecting 
+						// a wire connecting
 						const wire = new Wire({
 							startPosition: reservedWirePoint.position,
 							endPosition: this.wirePointPending.position
-						})
+						});
 
 						reservedWirePoint.addWire(wire);
 						this.wires.add(wire);
@@ -396,7 +404,7 @@ export class SimulationContext {
 					} else {
 						this.endWireOn(this.hover.outletPosition);
 					}
-				} else if (this.hover instanceof WirePoint && !this.keyboardInput.isKeyPressed("Control")) {
+				} else if (this.hover instanceof WirePoint && !this.keyboardInput.isKeyPressed('Control')) {
 					if (this.wirePointPending === undefined) {
 						this.createWireOn(this.hover.position);
 					} else {

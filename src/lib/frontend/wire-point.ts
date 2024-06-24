@@ -38,8 +38,7 @@ export class WirePoint {
 		this.wires.push(wire);
 	}
 
-	initEvents() {
-	}
+	initEvents() {}
 
 	getTopLeftPosition() {
 		return calculateBoxTopLeftPositionFromCenterPosition(
@@ -85,7 +84,7 @@ export class WirePoint {
 		return false;
 	}
 
-	deselect() { }
+	deselect() {}
 
 	draw(ctx: CanvasRenderingContext2D, currTime: number, deltaTime: number) {
 		drawRectangle(
