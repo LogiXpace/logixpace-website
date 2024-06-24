@@ -1,13 +1,13 @@
 <script context="module" lang="ts">
-	import type { SimulationProps } from './simulation';
+	import type { SimulationContextProps } from './simulation-context';
 
-	export type Props = Partial<Omit<SimulationProps, 'ctx'>>;
+	export type Props = Partial<Omit<SimulationContextProps, 'ctx'>>;
 </script>
 
 <script lang="ts">
 	import { Vector2D } from '$lib/helpers/vector2d';
 	import { onMount } from 'svelte';
-	import { Simulation } from './simulation';
+	import { SimulationContext } from './simulation-context';
 
 	const { offset = new Vector2D(), scale = 1, scaleFactor = 1 }: Props = $props();
 
@@ -29,7 +29,7 @@
 			canvas.height = window.innerHeight;
 		}
 
-		const simulation = new Simulation({ ctx, offset, scale, scaleFactor });
+		const simulationContext = new SimulationContext({ ctx, offset, scale, scaleFactor });
 
 		window.addEventListener('resize', handleResize);
 
@@ -39,9 +39,9 @@
 			let currFrame = performance.now();
 			let delta = currFrame - prevFrame;
 			prevFrame = currFrame;
-			FPS = 3600 / delta;
+			FPS = 1000 / delta;
 
-			simulation.draw();
+			simulationContext.update(currFrame, delta);
 			requestAnimationFrame(animate);
 		}
 
@@ -49,7 +49,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
-			simulation.destroy();
+			simulationContext.destroy();
 		};
 	});
 </script>
