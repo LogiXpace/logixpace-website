@@ -1,6 +1,16 @@
 export class Color {
+	alpha: number;
+
+	constructor(alpha: number) {
+		this.alpha = alpha;
+	}
+
 	string(): string {
 		return '';
+	}
+
+	clone(alpha: number): Color {
+		return new RGB(0, 0, 0, alpha);
 	}
 }
 
@@ -9,28 +19,19 @@ export class RGB extends Color {
 	green: number;
 	blue: number;
 
-	constructor(red: number, green: number, blue: number) {
-		super();
+	constructor(red: number, green: number, blue: number, alpha: number = 1) {
+		super(alpha);
 		this.red = red;
 		this.green = green;
 		this.blue = blue;
 	}
 
 	string(): string {
-		return `rgb(${this.red}, ${this.green}, ${this.blue})`;
-	}
-}
-
-export class RGBA extends RGB {
-	alpha: number;
-
-	constructor(red: number, green: number, blue: number, aplha: number) {
-		super(red, green, blue);
-		this.alpha = aplha;
+		return `rgba(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`;
 	}
 
-	string(): string {
-		return `rgb(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`;
+	clone(alpha: number) {
+		return new RGB(this.red, this.green, this.blue, alpha);
 	}
 }
 
@@ -39,14 +40,18 @@ export class HSL extends Color {
 	saturation: number;
 	lightness: number;
 
-	constructor(hue: number, saturation: number, lightness: number) {
-		super();
+	constructor(hue: number, saturation: number, lightness: number, aplha: number) {
+		super(aplha);
 		this.hue = hue;
 		this.saturation = saturation;
 		this.lightness = lightness;
 	}
 
 	string() {
-		return `hsl(${this.hue}, ${this.saturation}%, ${this.lightness}%)`;
+		return `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.alpha})`;
+	}
+
+	clone(alpha: number): Color {
+		return new HSL(this.hue, this.saturation, this.lightness, alpha);
 	}
 }
