@@ -96,6 +96,10 @@ export class Vector2D {
 		return this.x * otherVector.x + this.y * otherVector.y;
 	}
 
+	cross(otherVector: Vector2D): number {
+		return this.x * otherVector.y - this.y * otherVector.x;
+	}
+
 	length(): number {
 		return Math.sqrt(this.magnitude());
 	}
@@ -114,10 +118,16 @@ export class Vector2D {
 		return Math.sqrt(this.distanceToSquared(otherVector));
 	}
 
-	/**
-	 * checks whether the vector is equal to another vector
-	 */
 	equals(otherVector: Vector2D): boolean {
 		return this.x === otherVector.x && this.y === otherVector.y;
+	}
+
+	perpendicular() {
+		const x = this.x;
+
+		this.x = -this.y;
+		this.y = x;
+
+		return this;
 	}
 }
