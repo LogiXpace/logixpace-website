@@ -106,12 +106,14 @@ class QuadValueNode {
 	}
 }
 
+type Bound = Collider;
+
 class QuadValue<T> {
 	value: T;
-	bound: BoxCollider;
+	bound: Bound;
 	nodeIndices: Set<number>;
 
-	constructor(value: T, bound: BoxCollider) {
+	constructor(value: T, bound: Bound) {
 		this.value = value;
 		this.nodeIndices = new Set();
 		this.bound = bound;
@@ -178,7 +180,7 @@ export class QuadTree<T> {
 				// case 3
 				const quadNodeIndex = quadValueNode.quadNodeIndex;
 				const quadNode = this.quadNodes.get(quadNodeIndex);
-				
+
 				quadNode.valueNodeIndex = -1;
 				quadNode.count--;
 			} else {
@@ -364,12 +366,12 @@ export class QuadTree<T> {
 
 		if (quadNode.valueNodeIndex !== -1) {
 			const prevQuadValueNode = this.quadValueNodes.get(quadNode.valueNodeIndex);
-			if (!(prevQuadValueNode instanceof QuadValueNode)) {
-				console.log("quad node", quadNodeIndex, quadNode)
-				console.log(prevQuadValueNode)
-				console.log(this)
-				throw new Error("erro time")
-			}
+			// if (!(prevQuadValueNode instanceof QuadValueNode)) {
+			// 	console.log('quad node', quadNodeIndex, quadNode);
+			// 	console.log(prevQuadValueNode);
+			// 	console.log(this);
+			// 	throw new Error('erro time');
+			// }
 
 			prevQuadValueNode.prevIndex = this.quadValueNodes.insert(quadValueNode);
 
@@ -484,7 +486,7 @@ export class QuadTree<T> {
 		// return indexes;
 	}
 
-	insert(value: T, bound: BoxCollider): -1 | number {
+	insert(value: T, bound: Bound): -1 | number {
 		const rootQuadNode = this.getRootNode();
 
 		// early return if the value is not colliding with the root quad node
@@ -625,16 +627,15 @@ export class QuadTree<T> {
 
 		let quadValues = new Set<T>();
 
-		
 		while (processQuadNodes.size > 0) {
 			// dequeue the quad node
 			const quadNode = processQuadNodes.dequeue() as QuadNode;
-			
+
 			// check is it colldiing with the quad node
 			if (!collider.isColliding(quadNode.collider)) {
 				continue;
 			}
-			
+
 			// check if it is a leaf
 			if (quadNode.isLeaf()) {
 				quadValues = quadValues.union(new Set(this.getCollidingValues(quadNode, collider)));
@@ -651,7 +652,7 @@ export class QuadTree<T> {
 		return quadValues;
 	}
 
-	remove(value: T, bound: BoxCollider) {
+	remove(value: T, bound: Bound) {
 		const rootQuadNode = this.getRootNode();
 		const processQuadNode: QuadNode[] = [];
 
