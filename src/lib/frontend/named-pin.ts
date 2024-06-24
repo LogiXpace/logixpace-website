@@ -1,5 +1,4 @@
-import type { PowerState } from "./state";
-
+import type { PowerState } from './state';
 
 export class NamedPin {
 	id: number;
