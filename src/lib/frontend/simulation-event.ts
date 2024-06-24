@@ -1,9 +1,8 @@
-type SimulationEvent<T> = {
+type SimulationEvent = {
 	id: string;
-	data: T;
 };
 
-type SimulationEventCallback<T> = (event: SimulationEvent<T>) => void;
+type SimulationEventCallback<T> = (data: T, event: SimulationEvent) => void;
 
 export class SimulationEventListener<T> {
 	private callback: SimulationEventCallback<T> | undefined = undefined;
@@ -16,9 +15,9 @@ export class SimulationEventListener<T> {
 		this.callback = undefined;
 	}
 
-	recieve(event: SimulationEvent<T>) {
+	recieve(data: T, event: SimulationEvent) {
 		if (this.callback) {
-			this.callback(event);
+			this.callback(data, event);
 		}
 	}
 
@@ -39,43 +38,59 @@ export class SimulationEventEmitter<T> {
 		this.listeners.add(listener);
 	}
 
-	delete(listener: SimulationEventListener<T>) {
+	remove(listener: SimulationEventListener<T>) {
 		this.listeners.delete(listener);
 	}
 
 	emit(data: T) {
-		const event: SimulationEvent<T> = {
-			id: this.id,
-			data
+		const event: SimulationEvent = {
+			id: this.id
 		};
 
 		for (const listener of this.listeners) {
 			if (listener.isDestroyed()) {
 				this.listeners.delete(listener);
 			} else {
-				listener.recieve(event);
+				listener.recieve(data, event);
 			}
 		}
 	}
 }
 
 export class SimulationEventDispatcher {
-	private emiiters = new Map<string, SimulationEventEmitter<any>>();
+	private emitters = new Map<string, SimulationEventEmitter<any>>();
 
 	constructor() {}
 
-	getEmitter(id: string) {
-		return this.emiiters.get(id);
-	}
-
 	addEmiiter(id: string): SimulationEventEmitter<any> {
-		if (this.emiiters.has(id)) {
-			throw new Error('emiiter already has the emiiter specifically set');
+		if (this.emitters.has(id)) {
+			throw new Error('emitter already has the emitter specifically set');
 		}
 
-		const emiiter = new SimulationEventEmitter(id);
-		this.emiiters.set(id, emiiter);
+		const emitter = new SimulationEventEmitter(id);
+		this.emitters.set(id, emitter);
 
-		return emiiter;
+		return emitter;
+	}
+
+	listen(id: string, listener: SimulationEventListener<any>) {
+		const emitter = this.emitters.get(id);
+		if (emitter !== undefined) {
+			emitter.bind(listener);
+		}
+	}
+
+	remove(id: string, listener: SimulationEventListener<any>) {
+		const emitter = this.emitters.get(id);
+		if (emitter !== undefined) {
+			emitter.remove(listener);
+		}
+	}
+
+	dispatch(id: string, data: any) {
+		const emitter = this.emitters.get(id);
+		if (emitter !== undefined) {
+			emitter.emit(data);
+		}
 	}
 }
