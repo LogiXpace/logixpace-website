@@ -1,4 +1,6 @@
-import type { Color } from './color';
+import { RGB, type Color } from './color';
+
+const TRANSPARENT_COLOR = new RGB(0, 0, 0, 0);
 
 export interface CanvasStyleConfig {
 	fillColor?: Color;
@@ -10,28 +12,33 @@ export interface CanvasStyleConfig {
 	lineJoin?: CanvasLineJoin;
 	miterLimit?: number;
 	lineDashOffset?: number;
+
+	lineDash?: number[];
 }
 
 export class CanvasStyle {
-	fillColor: Color | undefined = undefined;
-	strokeColor: Color | undefined = undefined;
+	fillColor: Color;
+	strokeColor: Color;
 
 	// line styles
-	lineWidth: number | undefined = undefined;
-	lineType: CanvasLineCap | undefined = undefined;
-	lineJoin: CanvasLineJoin | undefined = undefined;
-	miterLimit: number | undefined = undefined;
-	lineDashOffset: number | undefined = undefined;
+	lineWidth: number;
+	lineType: CanvasLineCap;
+	lineJoin: CanvasLineJoin;
+	miterLimit: number;
+	lineDashOffset: number;
+
+	lineDash: number[];
 
 	constructor({
-		fillColor,
-		strokeColor,
+		fillColor = TRANSPARENT_COLOR,
+		strokeColor = TRANSPARENT_COLOR,
 
-		lineWidth,
-		lineType,
-		lineJoin,
-		miterLimit,
-		lineDashOffset
+		lineWidth = 0,
+		lineType = 'square',
+		lineJoin = 'miter',
+		miterLimit = 0,
+		lineDashOffset = 0,
+		lineDash = []
 	}: CanvasStyleConfig) {
 		this.fillColor = fillColor;
 		this.strokeColor = strokeColor;
@@ -40,53 +47,25 @@ export class CanvasStyle {
 		this.lineType = lineType;
 		this.lineJoin = lineJoin;
 		this.miterLimit = miterLimit;
+
+		this.lineDash = lineDash;
 		this.lineDashOffset = lineDashOffset;
 	}
 
 	set(ctx: CanvasRenderingContext2D) {
-		if (this.fillColor) {
-			ctx.fillStyle = this.fillColor.string();
-		}
+		ctx.fillStyle = this.fillColor.string();
+		ctx.strokeStyle = this.strokeColor.string();
+		ctx.lineWidth = this.lineWidth;
+		ctx.lineCap = this.lineType;
+		ctx.lineJoin = this.lineJoin;
+		ctx.miterLimit = this.miterLimit;
+		ctx.lineDashOffset = this.lineDashOffset;
 
-		if (this.strokeColor) {
-			ctx.strokeStyle = this.strokeColor.string();
-		}
-
-		if (this.lineWidth) {
-			ctx.lineWidth = this.lineWidth;
-		}
-
-		if (this.lineType) {
-			ctx.lineCap = this.lineType;
-		}
-
-		if (this.lineJoin) {
-			ctx.lineJoin = this.lineJoin;
-		}
-
-		if (this.miterLimit) {
-			ctx.miterLimit = this.miterLimit;
-		}
-
-		if (this.lineDashOffset) {
-			ctx.lineDashOffset = this.lineDashOffset;
-		}
+		ctx.setLineDash(this.lineDash);
 	}
 
 	apply(ctx: CanvasRenderingContext2D) {
-		if (this.fillColor) {
-			ctx.fill();
-		}
-
-		if (
-			this.strokeColor ||
-			this.lineWidth ||
-			this.lineType ||
-			this.lineJoin ||
-			this.miterLimit ||
-			this.lineDashOffset
-		) {
-			ctx.stroke();
-		}
+		ctx.fill();
+		ctx.stroke();
 	}
 }
