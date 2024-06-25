@@ -6,21 +6,43 @@ import type { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS } from './defaults';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 
+export interface WireEntity {
+	addWire(wire: Wire): void
+	removeWire(wire: Wire): void
+}
+
 export interface WireProps {
 	startPosition: Vector2D;
 	endPosition: Vector2D;
+
+	start: WireEntity;
+	end: WireEntity;
 }
 
 export class Wire {
 	startPosition: Vector2D;
 	endPosition: Vector2D;
 
+	start: WireEntity;
+	end: WireEntity;
+
 	dispatcher = new SimulationEventDispatcher();
 	collider: LineCollider;
 
-	constructor({ startPosition, endPosition }: WireProps) {
+	constructor({ 
+		startPosition, 
+		endPosition,
+		start,
+		end
+	}: WireProps) {
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
+
+		this.start = start;
+		this.end = end;
+
+		this.start.addWire(this);
+		this.end.addWire(this);
 
 		this.collider = new LineCollider(this.startPosition, this.endPosition, DEFUALTS.WIRE_WIDTH);
 	}

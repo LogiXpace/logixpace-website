@@ -11,6 +11,7 @@ import type { Wire } from './wire';
 
 export interface WirePointProps {
 	position: Vector2D;
+	backendPinId: number;
 }
 
 export class WirePoint {
@@ -18,12 +19,15 @@ export class WirePoint {
 	collider: BoxCollider;
 	wires: Wire[] = [];
 
+	backendPinId: number;
+
 	isHovering = true;
 
 	dispatcher = new SimulationEventDispatcher();
 
-	constructor({ position }: WirePointProps) {
+	constructor({ position, backendPinId }: WirePointProps) {
 		this.position = position;
+		this.backendPinId = backendPinId;
 
 		this.collider = new BoxCollider(
 			this.getTopLeftPosition(),
@@ -36,6 +40,13 @@ export class WirePoint {
 
 	addWire(wire: Wire) {
 		this.wires.push(wire);
+	}
+	
+	removeWire(wire: Wire) {
+		const index = this.wires.indexOf(wire);
+		if (index !== -1) {
+			this.wires.splice(index, 1);
+		}
 	}
 
 	initEvents() {}

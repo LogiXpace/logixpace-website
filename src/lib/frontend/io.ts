@@ -77,6 +77,13 @@ export class IO {
 		this.wires.push(wire);
 	}
 
+	removeWire(wire: Wire) {
+		const index = this.wires.indexOf(wire);
+		if (index !== -1) {
+			this.wires.splice(index, 1);
+		}
+	}
+
 	updateColliders() {
 		this.calculateOutletPosition();
 		this.outletCollider.position.copy(this.getOutletTopLeftPosition());
