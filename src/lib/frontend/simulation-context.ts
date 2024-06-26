@@ -18,6 +18,9 @@ import { SimulationEventListener } from './simulation-event';
 import { getClosestPoint } from '$lib/helpers/shape';
 import type { Adapter } from './adapter';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from './state';
+import { Chip, type ChipProps } from './chip';
+import { ChipPin, type ChipPinProps } from './chip-pin';
+import type { ChipType } from './chip-types';
 
 const QUADTREE_MAX_CAPACITY = 10;
 const QUADTREE_MAX_LEVEL = 15;
@@ -33,7 +36,7 @@ export interface SimulationContextProps<T> {
 	adapter: Adapter<T>;
 }
 
-type HoverAndSelectEntity<T> = WirePoint<T> | IO<T>;
+type HoverAndSelectEntity<T> = WirePoint<T> | IO<T> | Chip<T> | ChipPin<T>;
 
 export class SimulationContext<T> {
 	private ctx: CanvasRenderingContext2D;
@@ -46,6 +49,12 @@ export class SimulationContext<T> {
 
 	private wireTree: QuadTree<Wire<T>>;
 	private wires: Set<Wire<T>> = new Set();
+
+	private chipTree: QuadTree<Chip<T>>;
+	private chips: Set<Chip<T>> = new Set();
+
+	private chipPinTree: QuadTree<ChipPin<T>>;
+	private chipPins: Set<ChipPin<T>> = new Set();
 
 	private selected = new Set<HoverAndSelectEntity<T>>();
 
@@ -93,6 +102,20 @@ export class SimulationContext<T> {
 			QUADTREE_SIZE,
 			QUADTREE_SIZE
 		);
+		this.chipTree = new QuadTree(
+			QUADTREE_MAX_LEVEL,
+			QUADTREE_MAX_CAPACITY,
+			QUADTREE_POSITION,
+			QUADTREE_SIZE,
+			QUADTREE_SIZE
+		);
+		this.chipPinTree = new QuadTree(
+			QUADTREE_MAX_LEVEL,
+			QUADTREE_MAX_CAPACITY,
+			QUADTREE_POSITION,
+			QUADTREE_SIZE,
+			QUADTREE_SIZE
+		);
 
 		this.initEvents();
 	}
@@ -104,6 +127,8 @@ export class SimulationContext<T> {
 		this.ios = this.ioTree.query(screenCollider);
 		this.wirePoints = this.wirePointTree.query(screenCollider);
 		this.wires = this.wireTree.query(screenCollider);
+		this.chips = this.chipTree.query(screenCollider);
+		this.chipPins = this.chipPinTree.query(screenCollider);
 		const end = performance.now();
 
 		// console.group();
@@ -157,6 +182,53 @@ export class SimulationContext<T> {
 		this.queryAll();
 
 		return wire;
+	}
+
+	addChipPin(param: { namedPin: ChipPinProps<T>['namedPin'] }) {
+		const chipPin = new ChipPin({ ...param, position: new Vector2D(), direction: DIRECTION.LEFT });
+		this.chipPinTree.insert(chipPin, chipPin.outletCollider);
+
+		this.queryAll();
+
+		return chipPin;
+	}
+
+	addCustomChip(param: Omit<ChipProps<T>, 'textWidth'>) {
+		this.ctx.save();
+		this.ctx.textAlign = 'center';
+		this.ctx.textBaseline = 'middle';
+		this.ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
+		this.ctx.lineWidth = DEFUALTS.CHIP_FONT_STROKE_WIDTH;
+		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`
+		const measure = this.ctx.measureText(param.name);
+		const textWidth = measure.width;
+		this.ctx.restore();
+
+		const chip = new Chip({ ...param, textWidth });
+		this.chipTree.insert(chip, chip.collider);
+
+		this.queryAll();
+
+		return chip;
+	}
+
+	addBuiltInChip(chipType: ChipType) {
+		this.ctx.save();
+		this.ctx.textAlign = 'center';
+		this.ctx.textBaseline = 'middle';
+		this.ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
+		this.ctx.lineWidth = DEFUALTS.CHIP_FONT_STROKE_WIDTH;
+		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`
+		const measure = this.ctx.measureText(param.name);
+		const textWidth = measure.width;
+		this.ctx.restore();
+
+		const chip = new Chip({ ...param, textWidth });
+		this.chipTree.insert(chip, chip.collider);
+
+		this.queryAll();
+
+		return chip;
 	}
 
 	addNamedPin(param: Omit<NamedPinProps<T>, 'id'>) {
@@ -374,7 +446,10 @@ export class SimulationContext<T> {
 			return;
 		}
 
-		if (this.hover instanceof IO && this.hover.isOutletHovering) {
+		if (
+			(this.hover instanceof IO && this.hover.isOutletHovering) ||
+			(this.hover instanceof ChipPin && this.hover.isOutletHovering)
+		) {
 			if (this.wirePointPending === undefined) {
 				// create a new wire point
 				// @ts-expect-error
@@ -528,6 +603,18 @@ export class SimulationContext<T> {
 		}
 	}
 
+	moveChip(chip: Chip<T>, delta: Vector2D) {
+		this.chipTree.remove(chip, chip.collider);
+		chip.move(delta);
+		this.chipTree.insert(chip, chip.collider);
+	}
+
+	moveChipPin(chipPin: ChipPin<T>, delta: Vector2D) {
+		this.chipPinTree.remove(chipPin, chipPin.outletCollider);
+		chipPin.move(delta);
+		this.chipPinTree.insert(chipPin, chipPin.outletCollider);
+	}
+
 	handleMouseMove(mouseEvent: MouseEvent) {
 		this.mouseInput.handleMouseMove(mouseEvent);
 		const mouseWorldPosition = this.screenVectorToWorldVector(this.mouseInput.movePosition);
@@ -550,6 +637,10 @@ export class SimulationContext<T> {
 					this.moveIO(entity, delta);
 				} else if (entity instanceof WirePoint) {
 					this.moveWirePoint(entity, delta);
+				} else if (entity instanceof Chip) {
+					this.moveChip(entity, delta);
+				} else if (entity instanceof ChipPin) {
+					this.moveChipPin(entity, delta);
 				}
 			}
 		} else {
@@ -586,6 +677,16 @@ export class SimulationContext<T> {
 		}
 
 		queried = this.wirePointTree.queryByPoint(mouseCollider);
+		if (queried !== undefined && queried.checkHover(mouseCollider)) {
+			return queried;
+		}
+
+		queried = this.chipTree.queryByPoint(mouseCollider);
+		if (queried !== undefined && queried.checkHover(mouseCollider)) {
+			return queried;
+		}
+
+		queried = this.chipPinTree.queryByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
@@ -669,6 +770,16 @@ export class SimulationContext<T> {
 			io.draw(this.ctx, currTime, deltaTime);
 		}
 
+		const chipPins = this.chipPins.difference(this.selected);
+		for (const chipPin of chipPins) {
+			chipPin.draw(this.ctx, currTime, deltaTime);
+		}
+
+		const chips = this.chips.difference(this.selected);
+		for (const chip of chips) {
+			chip.draw(this.ctx, currTime, deltaTime);
+		}
+
 		for (const entity of this.selected) {
 			entity.draw(this.ctx, currTime, deltaTime);
 		}
@@ -713,11 +824,17 @@ export class SimulationContext<T> {
 			io.namedPin.powerState = this.adapter.getPowerState(io.namedPin.id);
 		}
 
+		for (const chipPin of this.chipPins) {
+			chipPin.namedPin.powerState = this.adapter.getPowerState(chipPin.namedPin.id);
+		}
+
 		this.draw(currTime, deltaTime);
 
 		this.ioTree.cleanup();
 		this.wirePointTree.cleanup();
 		this.wireTree.cleanup();
+		this.chipPinTree.cleanup();
+		this.chipTree.cleanup();
 		this.adapter.update();
 	}
 }
