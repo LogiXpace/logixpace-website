@@ -3,6 +3,8 @@
 	import { NamedPin } from '$lib/frontend/named-pin';
 	import type { SimulationContext } from '$lib/frontend/simulation-context';
 	import Simulation from '$lib/frontend/simulation.svelte';
+	import { POWER_STATE_HIGH } from '$lib/frontend/state';
+	import { Color, RGB } from '$lib/helpers/color';
 	import { DIRECTION } from '$lib/helpers/direction';
 	import { Vector2D } from '$lib/helpers/vector2d';
 
@@ -13,22 +15,36 @@
 			return;
 		}
 
-		simulationContext.addIO({
-			namedPin: simulationContext.addNamedPin({
-				name: 'input-test',
-				powerState: 1
-			}),
-			position: new Vector2D(-100, 0),
-			direction: DIRECTION.RIGHT
+		simulationContext.addChip({
+			position: new Vector2D(400, 200),
+			name: 'chip',
+			color: new RGB(0, 0, 0),
+			inputPins: [
+				simulationContext.addChipPin({
+					namedPin: simulationContext.addNamedPin({
+						name: 'input-pin',
+						powerState: 1
+					})
+				})
+			],
+			outputPins: [
+				simulationContext.addChipPin({
+					namedPin: simulationContext.addNamedPin({
+						name: 'output-pin',
+						powerState: 1
+					})
+				})
+			]
 		});
 
 		simulationContext.addIO({
+			direction: DIRECTION.RIGHT,
+			position: new Vector2D(),
 			namedPin: simulationContext.addNamedPin({
-				name: 'output',
-				powerState: 1
+				name: 'hello',
+				powerState: POWER_STATE_HIGH
 			}),
-			position: new Vector2D(100, 0),
-			direction: DIRECTION.LEFT
+			color: new RGB(0, 0, 0)
 		});
 	});
 </script>
