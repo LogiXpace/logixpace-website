@@ -1,7 +1,7 @@
 import { CanvasStyle } from '$lib/helpers/canvas-style';
-import { BoxCollider, Collider, LineCollider, PointCollider } from '$lib/helpers/colliders';
+import { BoxCollider, CircleCollider, Collider, LineCollider, PointCollider } from '$lib/helpers/colliders';
 import { Color, HSL, RGB } from '$lib/helpers/color';
-import { drawLine, drawRectangle } from '$lib/helpers/draw';
+import { drawCircle, drawLine, drawRectangle } from '$lib/helpers/draw';
 import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
 import { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS } from './defaults';
@@ -16,11 +16,11 @@ export interface IOProps extends PinProps {
 }
 
 export class IO {
-	collider: BoxCollider;
 	bound: BoxCollider;
 
+	collider: CircleCollider;
 	outletLineCollider: LineCollider;
-	outletCollider: BoxCollider;
+	outletCollider: CircleCollider;
 
 	namedPin: NamedPin;
 
@@ -55,13 +55,12 @@ export class IO {
 			DEFUALTS.PIN_OUTLET_LINE_WIDTH
 		);
 
-		this.outletCollider = new BoxCollider(
-			this.getOutletTopLeftPosition(),
+		this.outletCollider = new CircleCollider(
+			this.outletPosition,
 			DEFUALTS.PIN_OUTLET_SIZE,
-			DEFUALTS.PIN_OUTLET_SIZE
 		);
 
-		this.collider = new BoxCollider(this.getTopLeftPosition(), DEFUALTS.IO_SIZE, DEFUALTS.IO_SIZE);
+		this.collider = new CircleCollider(this.position, DEFUALTS.IO_SIZE);
 
 		const result = this.calculateBound();
 		this.bound = new BoxCollider(result.position, result.width, result.height);
@@ -86,7 +85,7 @@ export class IO {
 
 	updateColliders() {
 		this.calculateOutletPosition();
-		this.outletCollider.position.copy(this.getOutletTopLeftPosition());
+		this.outletCollider.position.copy(this.outletPosition);
 
 		this.outletLineCollider.startPosition.copy(this.getOutletLinePosition());
 		this.outletLineCollider.endPosition.copy(this.outletPosition);
@@ -94,19 +93,11 @@ export class IO {
 		const result = this.calculateBound();
 		this.bound.position.copy(result.position);
 
-		this.collider.position.copy(this.getTopLeftPosition());
+		this.collider.position.copy(this.position);
 	}
 
 	getOutletLinePosition() {
 		return this.position.clone().subScalar(DEFUALTS.PIN_OUTLET_LINE_WIDTH / 2);
-	}
-
-	getOutletTopLeftPosition() {
-		return this.outletPosition.clone().subScalar(DEFUALTS.PIN_OUTLET_SIZE / 2);
-	}
-
-	getTopLeftPosition() {
-		return this.position.clone().subScalar(DEFUALTS.IO_SIZE / 2);
 	}
 
 	calculateOutletPosition() {
@@ -221,22 +212,20 @@ export class IO {
 			})
 		);
 
-		drawRectangle(
+		drawCircle(
 			ctx,
 			this.outletCollider.position.x,
 			this.outletCollider.position.y,
-			DEFUALTS.PIN_OUTLET_SIZE,
 			DEFUALTS.PIN_OUTLET_SIZE,
 			new CanvasStyle({
 				fillColor: this.color
 			})
 		);
 
-		drawRectangle(
+		drawCircle(
 			ctx,
 			this.collider.position.x,
 			this.collider.position.y,
-			DEFUALTS.IO_SIZE,
 			DEFUALTS.IO_SIZE,
 			new CanvasStyle({
 				fillColor: this.color

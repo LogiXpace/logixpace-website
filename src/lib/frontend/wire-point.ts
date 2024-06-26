@@ -1,7 +1,7 @@
 import { CanvasStyle } from '$lib/helpers/canvas-style';
-import { BoxCollider, Collider, PointCollider } from '$lib/helpers/colliders';
+import { BoxCollider, CircleCollider, Collider, PointCollider } from '$lib/helpers/colliders';
 import { RGB } from '$lib/helpers/color';
-import { drawRectangle } from '$lib/helpers/draw';
+import { drawCircle, drawRectangle } from '$lib/helpers/draw';
 import { calculateBoxTopLeftPositionFromCenterPosition } from '$lib/helpers/shape';
 import type { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS, type EventIDTypes } from './defaults';
@@ -16,7 +16,7 @@ export interface WirePointProps {
 
 export class WirePoint {
 	position: Vector2D;
-	collider: BoxCollider;
+	collider: CircleCollider;
 	wires: Wire[] = [];
 
 	backendPinId: number;
@@ -29,9 +29,8 @@ export class WirePoint {
 		this.position = position;
 		this.backendPinId = backendPinId;
 
-		this.collider = new BoxCollider(
-			this.getTopLeftPosition(),
-			DEFUALTS.WIRE_POINT_SIZE,
+		this.collider = new CircleCollider(
+			this.position,
 			DEFUALTS.WIRE_POINT_SIZE
 		);
 
@@ -41,7 +40,7 @@ export class WirePoint {
 	addWire(wire: Wire) {
 		this.wires.push(wire);
 	}
-	
+
 	removeWire(wire: Wire) {
 		const index = this.wires.indexOf(wire);
 		if (index !== -1) {
@@ -49,22 +48,14 @@ export class WirePoint {
 		}
 	}
 
-	initEvents() {}
-
-	getTopLeftPosition() {
-		return calculateBoxTopLeftPositionFromCenterPosition(
-			this.position,
-			DEFUALTS.WIRE_POINT_SIZE,
-			DEFUALTS.WIRE_POINT_SIZE
-		);
-	}
+	initEvents() { }
 
 	isCollidingMain(collider: Collider) {
 		return this.collider.isColliding(collider);
 	}
 
 	updateCollider() {
-		this.collider.position.copy(this.getTopLeftPosition());
+		this.collider.position.copy(this.position);
 	}
 
 	move(delta: Vector2D) {
@@ -95,14 +86,13 @@ export class WirePoint {
 		return false;
 	}
 
-	deselect() {}
+	deselect() { }
 
 	draw(ctx: CanvasRenderingContext2D, currTime: number, deltaTime: number) {
-		drawRectangle(
+		drawCircle(
 			ctx,
 			this.collider.position.x,
 			this.collider.position.y,
-			DEFUALTS.WIRE_POINT_SIZE,
 			DEFUALTS.WIRE_POINT_SIZE,
 			new CanvasStyle({
 				fillColor: new RGB(150, 150, 150)
