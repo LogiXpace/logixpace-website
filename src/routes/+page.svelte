@@ -66,7 +66,7 @@
 	</p>
 	<div class="mt-6 flex justify-center space-x-4">
 		<a
-			href="/simulator2"
+			href="/simulator"
 			class="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-400"
 			>Launch Simulator</a
 		>
