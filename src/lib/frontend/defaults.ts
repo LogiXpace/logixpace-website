@@ -10,7 +10,7 @@ export const DEFUALTS = {
 	PIN_OUTLET_2_SIZE: 14,
 
 	IO_SIZE: 10,
-	IO_2_SIZE: 10,
+	IO_2_SIZE: 20,
 
 	WIRE_POINT_SIZE: 3.5,
 	WIRE_WIDTH: 3
