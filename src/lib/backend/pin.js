@@ -47,6 +47,23 @@ export class Pin {
 	}
 
 	/**
+	 * connect pin
+	 * @param {Pin} pin - the pin to connect to
+	 */
+	disconnectPin(pin) {
+		const index = this.connectedPins.indexOf(pin);
+		if (index === -1) {
+			return;
+		}
+
+		this.connectedPins.splice(index, 1);
+
+		// decrement the number of connectors on the pin.
+		pin.maximumInfluencers--;
+		pin.influx--;
+	}
+
+	/**
 	 * connect chip
 	 * @param {import("./chip").Chip} chip - the chip to connect to
 	 */
