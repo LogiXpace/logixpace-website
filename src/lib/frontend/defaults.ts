@@ -13,7 +13,12 @@ export const DEFUALTS = {
 	IO_2_SIZE: 20,
 
 	WIRE_POINT_SIZE: 3.5,
-	WIRE_WIDTH: 3
+	WIRE_WIDTH: 3,
+
+	CHIP_FONT_SIZE: 20,
+	CHIP_FONT_COLOR: '#fff',
+	CHIP_FONT_FAMILY: 'monospace',
+	CHIP_FONT_STROKE_WIDTH: 1,
 };
 
 export const EVENT_IDS = {
