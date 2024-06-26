@@ -298,7 +298,7 @@ export class SimulationContext<T> {
 						start: closestWirePoint,
 						startPosition: closestPoint,
 						end: wire.end,
-						endPosition: wire.endPosition,
+						endPosition: wire.endPosition
 					});
 
 					this.adapter.connect(closestWirePoint.pinId, wire.end.pinId);
@@ -474,7 +474,10 @@ export class SimulationContext<T> {
 		}
 
 		if (this.hover instanceof IO && this.keyboardInput.isKeyPressed('Shift')) {
-			this.adapter.setPowerState(this.hover.namedPin.id, this.hover.namedPin.powerState === POWER_STATE_HIGH ? POWER_STATE_LOW : POWER_STATE_HIGH);
+			this.adapter.setPowerState(
+				this.hover.namedPin.id,
+				this.hover.namedPin.powerState === POWER_STATE_HIGH ? POWER_STATE_LOW : POWER_STATE_HIGH
+			);
 			return;
 		}
 
@@ -659,7 +662,6 @@ export class SimulationContext<T> {
 		const wirePoints = this.wirePoints.difference(this.selected);
 		for (const wirePoint of wirePoints) {
 			wirePoint.draw(this.ctx, currTime, deltaTime);
-
 		}
 
 		const ios = this.ios.difference(this.selected);
@@ -708,7 +710,7 @@ export class SimulationContext<T> {
 		}
 
 		for (const io of this.ios) {
-			io.namedPin.powerState = this.adapter.getPowerState(io.namedPin.id)
+			io.namedPin.powerState = this.adapter.getPowerState(io.namedPin.id);
 		}
 
 		this.draw(currTime, deltaTime);

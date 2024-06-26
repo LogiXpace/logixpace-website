@@ -1,1 +1,1 @@
-export type ChipType = "and" | "or" | "not" | "xor" | "nand" | "nor" | "xnor";
+export type ChipType = 'and' | 'or' | 'not' | 'xor' | 'nand' | 'nor' | 'xnor';

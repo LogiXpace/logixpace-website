@@ -11,8 +11,8 @@ export interface WireEntity<T> {
 
 	get activated(): boolean;
 
-	addWire(wire: Wire<T>): void
-	removeWire(wire: Wire<T>): void
+	addWire(wire: Wire<T>): void;
+	removeWire(wire: Wire<T>): void;
 }
 
 export interface WireProps<T> {
@@ -33,12 +33,7 @@ export class Wire<T> {
 	dispatcher = new SimulationEventDispatcher();
 	collider: LineCollider;
 
-	constructor({
-		startPosition,
-		endPosition,
-		start,
-		end
-	}: WireProps<T>) {
+	constructor({ startPosition, endPosition, start, end }: WireProps<T>) {
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
 
@@ -77,7 +72,7 @@ export class Wire<T> {
 			this.endPosition.y,
 			new CanvasStyle({
 				strokeColor: this.start.activated ? new RGB(100, 100, 100, 1) : new RGB(75, 50, 255, 1),
-				lineWidth: DEFUALTS.WIRE_WIDTH,
+				lineWidth: DEFUALTS.WIRE_WIDTH
 			})
 		);
 	}

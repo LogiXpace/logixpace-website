@@ -1,5 +1,11 @@
 import { CanvasStyle } from '$lib/helpers/canvas-style';
-import { BoxCollider, CircleCollider, Collider, LineCollider, PointCollider } from '$lib/helpers/colliders';
+import {
+	BoxCollider,
+	CircleCollider,
+	Collider,
+	LineCollider,
+	PointCollider
+} from '$lib/helpers/colliders';
 import { Color, HSL, RGB } from '$lib/helpers/color';
 import { drawCircle, drawLine, drawRectangle } from '$lib/helpers/draw';
 import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
@@ -56,10 +62,7 @@ export class IO<T> {
 			DEFUALTS.PIN_OUTLET_LINE_WIDTH
 		);
 
-		this.outletCollider = new CircleCollider(
-			this.outletPosition,
-			DEFUALTS.PIN_OUTLET_SIZE,
-		);
+		this.outletCollider = new CircleCollider(this.outletPosition, DEFUALTS.PIN_OUTLET_SIZE);
 
 		this.collider = new CircleCollider(this.position, DEFUALTS.IO_SIZE);
 
@@ -126,11 +129,7 @@ export class IO<T> {
 		const end = this.position
 			.clone()
 			.addVector(
-				dirVector
-					.clone()
-					.multScalar(
-						DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_2_SIZE
-					)
+				dirVector.clone().multScalar(DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_2_SIZE)
 			);
 		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE));
 

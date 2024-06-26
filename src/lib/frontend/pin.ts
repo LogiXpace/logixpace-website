@@ -9,14 +9,14 @@ import { HSL } from '$lib/helpers/color';
 import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
 import { DIRECTION, getDirectionVector, type Direction } from '../helpers/direction';
 
-export interface PinProps {
+export interface PinProps<T> {
 	position: Vector2D;
-	namedPin: NamedPin;
+	namedPin: NamedPin<T>;
 	direction: Direction;
 }
 
-export class Pin {
-	#namedPin: NamedPin;
+export class Pin<T> {
+	#namedPin: NamedPin<T>;
 	#position: Vector2D;
 
 	outletPosition: Vector2D = new Vector2D();
@@ -31,7 +31,7 @@ export class Pin {
 	#outletLineCollider: BoxCollider;
 	#outletCollider: BoxCollider;
 
-	constructor({ namedPin, position, direction }: PinProps) {
+	constructor({ namedPin, position, direction }: PinProps<T>) {
 		this.#namedPin = namedPin;
 		this.#position = position.clone();
 
