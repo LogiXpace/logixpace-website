@@ -1,0 +1,85 @@
+<script>
+	import { goto } from '$app/navigation';
+
+	let form = {
+		email: '',
+		password: ''
+	};
+
+	/**
+	 * @param {{ preventDefault: () => void; }} event
+	 */
+	function handleSubmit(event) {
+		event.preventDefault();
+		console.log(form);
+		// Add login logic here (e.g., authenticate with a server)
+		alert('Login submitted successfully!');
+	}
+</script>
+
+<div class="back-container dotted-grid h-screen overflow-hidden">
+	<div class="absolute bg-transparent px-10 py-8 text-blue-500">
+		<a href="/" class="text-3xl font-bold"> LogiXpace </a>
+	</div>
+	<div class="flex min-h-screen items-center justify-center bg-transparent">
+		<div class="w-full max-w-md rounded-lg bg-gray-800 p-8 text-white shadow-md">
+			<h2 class="glow mb-6 text-center text-3xl font-bold">Login</h2>
+			<form on:submit="{handleSubmit}">
+				<div class="mb-4">
+					<label class="mb-2 block text-sm font-bold text-gray-400" for="email">Email</label>
+					<input
+						id="email"
+						type="email"
+						bind:value="{form.email}"
+						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
+						required
+					/>
+				</div>
+				<div class="mb-6">
+					<label class="mb-2 block text-sm font-bold text-gray-400" for="password">Password</label>
+					<input
+						id="password"
+						type="password"
+						bind:value="{form.password}"
+						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
+						required
+					/>
+				</div>
+				<div class="flex items-center justify-between">
+					<button
+						type="submit"
+						class="focus:shadow-outline w-full rounded bg-blue-600 px-4 py-2 font-bold text-white transition-all duration-300 hover:bg-blue-400 focus:outline-none"
+					>
+						Login
+					</button>
+				</div>
+				<div class="mt-4 text-center">
+					<a href="/signup" class="text-blue-400 transition-all duration-300 hover:text-blue-600"
+						>Don't have an account? Sign Up</a
+					>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<style>
+	/* .glow {
+		text-shadow:
+			0 0 10px #00b7ff,
+			0 0 20px #00b7ff,
+			0 0 30px #00b7ff,
+			0 0 40px #00b7ff,
+			0 0 50px #00b7ff,
+			0 0 60px #00b7ff,
+			0 0 70px #00b7ff;
+	} */
+	.back-container {
+		@apply text-white;
+		background: rgb(7, 7, 20);
+	}
+	.dotted-grid {
+		background-image: radial-gradient(circle, #272727 1px, rgba(255, 255, 255, 0) 1px);
+		background-size: 20px 20px;
+	}
+</style>

@@ -1,15 +1,23 @@
 <script context="module" lang="ts">
-	import type { SimulationContextProps } from './simulation-context';
-
-	export type Props = Partial<Omit<SimulationContextProps, 'ctx'>>;
+	export type Props<T> = Partial<Omit<SimulationContextProps<T>, 'ctx'>> & {
+		adapter: SimulationContextProps<T>['adapter'];
+		simulationContext: SimulationContext<T> | undefined;
+	};
 </script>
 
-<script lang="ts">
+<script lang="ts" generics="T">
+	import type { SimulationContextProps } from './simulation-context';
 	import { Vector2D } from '$lib/helpers/vector2d';
 	import { onMount } from 'svelte';
 	import { SimulationContext } from './simulation-context';
 
-	const { offset = new Vector2D(), scale = 1, scaleFactor = 1 }: Props = $props();
+	let {
+		offset = new Vector2D(),
+		scale = 1,
+		scaleFactor = 1,
+		adapter,
+		simulationContext = $bindable()
+	}: Props<T> = $props();
 
 	let simulationElement: HTMLDivElement;
 	let canvas: HTMLCanvasElement;
@@ -29,26 +37,29 @@
 			canvas.height = window.innerHeight;
 		}
 
-		const simulationContext = new SimulationContext({ ctx, offset, scale, scaleFactor });
-
+		simulationContext = new SimulationContext({ ctx, offset, scale, scaleFactor, adapter });
 		window.addEventListener('resize', handleResize);
 
 		let prevFrame = 0;
 
-		function animate() {
+		const animate = () => {
 			let currFrame = performance.now();
 			let delta = currFrame - prevFrame;
 			prevFrame = currFrame;
 			FPS = 1000 / delta;
 
+			// @ts-ignore
 			simulationContext.update(currFrame, delta);
+
 			requestAnimationFrame(animate);
-		}
+		};
 
 		animate();
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+
+			// @ts-ignore
 			simulationContext.destroy();
 		};
 	});

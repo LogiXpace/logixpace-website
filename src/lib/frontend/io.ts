@@ -1,7 +1,13 @@
 import { CanvasStyle } from '$lib/helpers/canvas-style';
-import { BoxCollider, Collider, LineCollider, PointCollider } from '$lib/helpers/colliders';
+import {
+	BoxCollider,
+	CircleCollider,
+	Collider,
+	LineCollider,
+	PointCollider
+} from '$lib/helpers/colliders';
 import { Color, HSL, RGB } from '$lib/helpers/color';
-import { drawLine, drawRectangle } from '$lib/helpers/draw';
+import { drawCircle, drawLine, drawRectangle } from '$lib/helpers/draw';
 import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
 import { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS } from './defaults';
@@ -10,19 +16,20 @@ import type { NamedPin } from './named-pin';
 import { Pin, type PinProps } from './pin';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 import type { Wire } from './wire';
+import { POWER_STATE_HIGH } from './state';
 
-export interface IOProps extends PinProps {
+export interface IOProps<T> extends PinProps<T> {
 	color?: Color;
 }
 
-export class IO {
-	collider: BoxCollider;
+export class IO<T> {
 	bound: BoxCollider;
 
+	collider: CircleCollider;
 	outletLineCollider: LineCollider;
-	outletCollider: BoxCollider;
+	outletCollider: CircleCollider;
 
-	namedPin: NamedPin;
+	namedPin: NamedPin<T>;
 
 	position: Vector2D;
 	outletPosition: Vector2D = new Vector2D();
@@ -30,7 +37,7 @@ export class IO {
 
 	dispatcher = new SimulationEventDispatcher();
 
-	wires: Wire[] = [];
+	wires: Wire<T>[] = [];
 
 	isSelected = false;
 	isHovering = false;
@@ -39,7 +46,7 @@ export class IO {
 
 	color: Color;
 
-	constructor({ namedPin, position, direction, color = new RGB(0, 0, 0) }: IOProps) {
+	constructor({ namedPin, position, direction, color = new RGB(0, 0, 0) }: IOProps<T>) {
 		this.namedPin = namedPin;
 		this.position = position.clone();
 
@@ -55,13 +62,9 @@ export class IO {
 			DEFUALTS.PIN_OUTLET_LINE_WIDTH
 		);
 
-		this.outletCollider = new BoxCollider(
-			this.getOutletTopLeftPosition(),
-			DEFUALTS.PIN_OUTLET_SIZE,
-			DEFUALTS.PIN_OUTLET_SIZE
-		);
+		this.outletCollider = new CircleCollider(this.outletPosition, DEFUALTS.PIN_OUTLET_SIZE);
 
-		this.collider = new BoxCollider(this.getTopLeftPosition(), DEFUALTS.IO_SIZE, DEFUALTS.IO_SIZE);
+		this.collider = new CircleCollider(this.position, DEFUALTS.IO_SIZE);
 
 		const result = this.calculateBound();
 		this.bound = new BoxCollider(result.position, result.width, result.height);
@@ -69,17 +72,32 @@ export class IO {
 		this.initEvents();
 	}
 
+	get pinId() {
+		return this.namedPin.id;
+	}
+
+	get activated() {
+		return this.namedPin.powerState === POWER_STATE_HIGH;
+	}
+
 	initEvents() {
 		this.dispatcher.addEmiiter(EVENT_IDS.onMove);
 	}
 
-	addWire(wire: Wire) {
+	addWire(wire: Wire<T>) {
 		this.wires.push(wire);
+	}
+
+	removeWire(wire: Wire<T>) {
+		const index = this.wires.indexOf(wire);
+		if (index !== -1) {
+			this.wires.splice(index, 1);
+		}
 	}
 
 	updateColliders() {
 		this.calculateOutletPosition();
-		this.outletCollider.position.copy(this.getOutletTopLeftPosition());
+		this.outletCollider.position.copy(this.outletPosition);
 
 		this.outletLineCollider.startPosition.copy(this.getOutletLinePosition());
 		this.outletLineCollider.endPosition.copy(this.outletPosition);
@@ -87,19 +105,11 @@ export class IO {
 		const result = this.calculateBound();
 		this.bound.position.copy(result.position);
 
-		this.collider.position.copy(this.getTopLeftPosition());
+		this.collider.position.copy(this.position);
 	}
 
 	getOutletLinePosition() {
 		return this.position.clone().subScalar(DEFUALTS.PIN_OUTLET_LINE_WIDTH / 2);
-	}
-
-	getOutletTopLeftPosition() {
-		return this.outletPosition.clone().subScalar(DEFUALTS.PIN_OUTLET_SIZE / 2);
-	}
-
-	getTopLeftPosition() {
-		return this.position.clone().subScalar(DEFUALTS.IO_SIZE / 2);
 	}
 
 	calculateOutletPosition() {
@@ -119,26 +129,22 @@ export class IO {
 		const end = this.position
 			.clone()
 			.addVector(
-				dirVector
-					.clone()
-					.multScalar(
-						DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_SIZE + DEFUALTS.IO_SIZE / 2
-					)
+				dirVector.clone().multScalar(DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_2_SIZE)
 			);
-		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE / 2));
+		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE));
 
 		switch (dir) {
 			case DIRECTION.RIGHT:
 			case DIRECTION.LEFT: {
-				end.y += DEFUALTS.IO_SIZE / 2;
-				start.y -= DEFUALTS.IO_SIZE / 2;
+				end.y += DEFUALTS.IO_SIZE;
+				start.y -= DEFUALTS.IO_SIZE;
 				return calculateBoxFromTwoPoint(start, end);
 			}
 
 			case DIRECTION.TOP:
 			case DIRECTION.BOTTOM: {
-				end.x += DEFUALTS.IO_SIZE / 2;
-				start.x -= DEFUALTS.IO_SIZE / 2;
+				end.x += DEFUALTS.IO_SIZE;
+				start.x -= DEFUALTS.IO_SIZE;
 				return calculateBoxFromTwoPoint(start, end);
 			}
 		}
@@ -210,29 +216,27 @@ export class IO {
 			this.outletPosition.y,
 			new CanvasStyle({
 				lineWidth: DEFUALTS.PIN_OUTLET_LINE_WIDTH,
-				strokeColor: this.color
+				strokeColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 
-		drawRectangle(
+		drawCircle(
 			ctx,
 			this.outletCollider.position.x,
 			this.outletCollider.position.y,
-			DEFUALTS.PIN_OUTLET_SIZE,
-			DEFUALTS.PIN_OUTLET_SIZE,
+			this.outletCollider.radius,
 			new CanvasStyle({
-				fillColor: this.color
+				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 
-		drawRectangle(
+		drawCircle(
 			ctx,
 			this.collider.position.x,
 			this.collider.position.y,
-			DEFUALTS.IO_SIZE,
-			DEFUALTS.IO_SIZE,
+			this.collider.radius,
 			new CanvasStyle({
-				fillColor: this.color
+				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 	}

@@ -6,21 +6,42 @@ import type { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS } from './defaults';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 
-export interface WireProps {
-	startPosition: Vector2D;
-	endPosition: Vector2D;
+export interface WireEntity<T> {
+	pinId: T;
+
+	get activated(): boolean;
+
+	addWire(wire: Wire<T>): void;
+	removeWire(wire: Wire<T>): void;
 }
 
-export class Wire {
+export interface WireProps<T> {
 	startPosition: Vector2D;
 	endPosition: Vector2D;
+
+	start: WireEntity<T>;
+	end: WireEntity<T>;
+}
+
+export class Wire<T> {
+	startPosition: Vector2D;
+	endPosition: Vector2D;
+
+	start: WireEntity<T>;
+	end: WireEntity<T>;
 
 	dispatcher = new SimulationEventDispatcher();
 	collider: LineCollider;
 
-	constructor({ startPosition, endPosition }: WireProps) {
+	constructor({ startPosition, endPosition, start, end }: WireProps<T>) {
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
+
+		this.start = start;
+		this.end = end;
+
+		this.start.addWire(this);
+		this.end.addWire(this);
 
 		this.collider = new LineCollider(this.startPosition, this.endPosition, DEFUALTS.WIRE_WIDTH);
 	}
@@ -50,10 +71,8 @@ export class Wire {
 			this.endPosition.x,
 			this.endPosition.y,
 			new CanvasStyle({
-				strokeColor: new RGB(25, 25, 25, 0.8),
-				lineWidth: DEFUALTS.WIRE_WIDTH,
-				lineDashOffset: -currTime * 0.03,
-				lineDash: [10, 5]
+				strokeColor: this.start.activated ? new RGB(100, 100, 100, 1) : new RGB(75, 50, 255, 1),
+				lineWidth: DEFUALTS.WIRE_WIDTH
 			})
 		);
 	}
