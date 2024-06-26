@@ -10,19 +10,20 @@ import type { NamedPin } from './named-pin';
 import { Pin, type PinProps } from './pin';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 import type { Wire } from './wire';
+import { POWER_STATE_HIGH } from './state';
 
-export interface IOProps extends PinProps {
+export interface IOProps<T> extends PinProps<T> {
 	color?: Color;
 }
 
-export class IO {
+export class IO<T> {
 	bound: BoxCollider;
 
 	collider: CircleCollider;
 	outletLineCollider: LineCollider;
 	outletCollider: CircleCollider;
 
-	namedPin: NamedPin;
+	namedPin: NamedPin<T>;
 
 	position: Vector2D;
 	outletPosition: Vector2D = new Vector2D();
@@ -30,7 +31,7 @@ export class IO {
 
 	dispatcher = new SimulationEventDispatcher();
 
-	wires: Wire[] = [];
+	wires: Wire<T>[] = [];
 
 	isSelected = false;
 	isHovering = false;
@@ -39,7 +40,7 @@ export class IO {
 
 	color: Color;
 
-	constructor({ namedPin, position, direction, color = new RGB(0, 0, 0) }: IOProps) {
+	constructor({ namedPin, position, direction, color = new RGB(0, 0, 0) }: IOProps<T>) {
 		this.namedPin = namedPin;
 		this.position = position.clone();
 
@@ -68,15 +69,23 @@ export class IO {
 		this.initEvents();
 	}
 
+	get pinId() {
+		return this.namedPin.id;
+	}
+
+	get activated() {
+		return this.namedPin.powerState === POWER_STATE_HIGH;
+	}
+
 	initEvents() {
 		this.dispatcher.addEmiiter(EVENT_IDS.onMove);
 	}
 
-	addWire(wire: Wire) {
+	addWire(wire: Wire<T>) {
 		this.wires.push(wire);
 	}
 
-	removeWire(wire: Wire) {
+	removeWire(wire: Wire<T>) {
 		const index = this.wires.indexOf(wire);
 		if (index !== -1) {
 			this.wires.splice(index, 1);
@@ -120,23 +129,23 @@ export class IO {
 				dirVector
 					.clone()
 					.multScalar(
-						DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_SIZE + DEFUALTS.IO_SIZE / 2
+						DEFUALTS.PIN_OUTLET_LINE_LENGTH + DEFUALTS.PIN_OUTLET_2_SIZE
 					)
 			);
-		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE / 2));
+		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE));
 
 		switch (dir) {
 			case DIRECTION.RIGHT:
 			case DIRECTION.LEFT: {
-				end.y += DEFUALTS.IO_SIZE / 2;
-				start.y -= DEFUALTS.IO_SIZE / 2;
+				end.y += DEFUALTS.IO_SIZE;
+				start.y -= DEFUALTS.IO_SIZE;
 				return calculateBoxFromTwoPoint(start, end);
 			}
 
 			case DIRECTION.TOP:
 			case DIRECTION.BOTTOM: {
-				end.x += DEFUALTS.IO_SIZE / 2;
-				start.x -= DEFUALTS.IO_SIZE / 2;
+				end.x += DEFUALTS.IO_SIZE;
+				start.x -= DEFUALTS.IO_SIZE;
 				return calculateBoxFromTwoPoint(start, end);
 			}
 		}
@@ -208,7 +217,7 @@ export class IO {
 			this.outletPosition.y,
 			new CanvasStyle({
 				lineWidth: DEFUALTS.PIN_OUTLET_LINE_WIDTH,
-				strokeColor: this.color
+				strokeColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 
@@ -216,9 +225,9 @@ export class IO {
 			ctx,
 			this.outletCollider.position.x,
 			this.outletCollider.position.y,
-			DEFUALTS.PIN_OUTLET_SIZE,
+			this.outletCollider.radius,
 			new CanvasStyle({
-				fillColor: this.color
+				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 
@@ -226,9 +235,9 @@ export class IO {
 			ctx,
 			this.collider.position.x,
 			this.collider.position.y,
-			DEFUALTS.IO_SIZE,
+			this.collider.radius,
 			new CanvasStyle({
-				fillColor: this.color
+				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
 			})
 		);
 	}

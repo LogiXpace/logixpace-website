@@ -9,25 +9,26 @@ import type { IO } from './io';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 import type { Wire } from './wire';
 
-export interface WirePointProps {
+export interface WirePointProps<T> {
 	position: Vector2D;
-	backendPinId: number;
+	pinId: T;
 }
 
-export class WirePoint {
+export class WirePoint<T> {
 	position: Vector2D;
 	collider: CircleCollider;
-	wires: Wire[] = [];
+	wires: Wire<T>[] = [];
 
-	backendPinId: number;
+	pinId: T;
 
-	isHovering = true;
+	isHovering = false;
+	isActivated = false;
 
 	dispatcher = new SimulationEventDispatcher();
 
-	constructor({ position, backendPinId }: WirePointProps) {
+	constructor({ position, pinId }: WirePointProps<T>) {
 		this.position = position;
-		this.backendPinId = backendPinId;
+		this.pinId = pinId;
 
 		this.collider = new CircleCollider(
 			this.position,
@@ -37,11 +38,15 @@ export class WirePoint {
 		this.initEvents();
 	}
 
-	addWire(wire: Wire) {
+	get activated() {
+		return this.isActivated;
+	}
+
+	addWire(wire: Wire<T>) {
 		this.wires.push(wire);
 	}
 
-	removeWire(wire: Wire) {
+	removeWire(wire: Wire<T>) {
 		const index = this.wires.indexOf(wire);
 		if (index !== -1) {
 			this.wires.splice(index, 1);
@@ -95,7 +100,7 @@ export class WirePoint {
 			this.collider.position.y,
 			DEFUALTS.WIRE_POINT_SIZE,
 			new CanvasStyle({
-				fillColor: new RGB(150, 150, 150)
+				fillColor: new RGB(150, 150, 150, this.isActivated ? 1 : 0.7)
 			})
 		);
 	}
