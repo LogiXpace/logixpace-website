@@ -1,12 +1,8 @@
-import { it } from 'vitest';
-import { describe } from 'vitest';
 import { BuiltinAndChip } from './builtin-and-chip';
 import { Pin } from '../pin';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from '../power-state';
-import { expect } from 'vitest';
-import { test } from 'vitest';
-import { Simulator } from '../simulator';
-import { expectBuiltinChipOutputCorrectly } from '$lib/chim/helpers/test';
+import { expect, describe, test } from 'vitest';
+import { expectBuiltinChipOutputCorrectly } from '../test';
 
 describe('builtin and chip', () => {
 	describe('should be created succesfully', () => {

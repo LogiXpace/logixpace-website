@@ -97,7 +97,7 @@ export class WirePoint<T> {
 			this.collider.position.y,
 			DEFUALTS.WIRE_POINT_SIZE,
 			new CanvasStyle({
-				fillColor: new RGB(150, 150, 150, this.isActivated ? 1 : 0.7)
+				fillColor: this.isActivated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
 	}
