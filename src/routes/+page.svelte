@@ -113,7 +113,7 @@
 	<p class="mt-4 text-lg md:text-xl">
 		Reach out to us at <a
 			href="mailto:info@logicgatesim.com"
-			class="text-blue-400 hover:text-blue-600">info@logicgatesim.com</a
+			class="text-blue-400 hover:text-blue-600">logicalalphaprogrammer@gmail.com</a
 		>
 	</p>
 
