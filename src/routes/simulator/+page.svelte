@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { BackendAdapter } from '$lib/frontend/backend-adapter';
-	import { NamedPin } from '$lib/frontend/named-pin';
 	import type { SimulationContext } from '$lib/frontend/simulation-context';
 	import Simulation from '$lib/frontend/simulation.svelte';
-	import { POWER_STATE_HIGH } from '$lib/frontend/state';
-	import { Color, RGB } from '$lib/helpers/color';
+	import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/frontend/state';
+	import { RGB } from '$lib/helpers/color';
 	import { DIRECTION } from '$lib/helpers/direction';
 	import { Vector2D } from '$lib/helpers/vector2d';
 
@@ -16,77 +15,6 @@
 		if (simulationContext === undefined) {
 			return;
 		}
-
-		simulationContext.addChip('and', ['input-pin-1', 'input-pin-2'], ['output-pin'], {
-			position: new Vector2D(400, 200),
-			name: 'and',
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addChip('or', ['input-pin-1', 'input-pin-2'], ['output-pin'], {
-			position: new Vector2D(400, 400),
-			name: 'or',
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addChip('not', ['input-pin'], ['output-pin'], {
-			position: new Vector2D(400, 600),
-			name: 'not',
-			color: new RGB(0, 0, 0)
-		});
-
-		simulationContext.addIO({
-			direction: DIRECTION.RIGHT,
-			position: new Vector2D(),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addIO({
-			direction: DIRECTION.RIGHT,
-			position: new Vector2D(0, 100),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addIO({
-			direction: DIRECTION.RIGHT,
-			position: new Vector2D(0, 200),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addIO({
-			direction: DIRECTION.RIGHT,
-			position: new Vector2D(0, 300),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addIO({
-			direction: DIRECTION.LEFT,
-			position: new Vector2D(600, 0),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
-		simulationContext.addIO({
-			direction: DIRECTION.LEFT,
-			position: new Vector2D(600, 100),
-			namedPin: simulationContext.addNamedPin({
-				name: 'hello',
-				powerState: POWER_STATE_HIGH
-			}),
-			color: new RGB(0, 0, 0)
-		});
 	});
 
 	$inspect(simulationContext);
@@ -112,9 +40,105 @@
 		style:left="{contextMenuPosition.x}px"
 		onblur={() => (isContextMenuOpen = false)}
 	>
-		<div class="flex items-center text-lg font-bold text-white">Add Chip</div>
-		<div class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white">
-			And
+		<div class="flex items-center text-lg font-bold text-white">Add Entities</div>
+
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addChip('and', ['a', 'b'], ['o'], {
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					name: 'and',
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			and
+		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addChip('or', ['a', 'b'], ['o'], {
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					name: 'or',
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			or
+		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addChip('xor', ['a', 'b'], ['o'], {
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					name: 'xor',
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			xor
+		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addChip('not', ['a'], ['o'], {
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					name: 'not',
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			not
+		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addIO({
+					direction: DIRECTION.RIGHT,
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					namedPin: simulationContext.addNamedPin({
+						name: 'input',
+						powerState: POWER_STATE_LOW
+					}),
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			input
+		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			onclick={() => {
+				isContextMenuOpen = false;
+				simulationContext.addIO({
+					direction: DIRECTION.LEFT,
+					position: simulationContext.screenVectorToWorldVector(contextMenuPosition),
+					namedPin: simulationContext.addNamedPin({
+						name: 'output',
+						powerState: POWER_STATE_LOW
+					}),
+					color: new RGB(0, 0, 0)
+				});
+			}}
+		>
+			output
 		</div>
 	</div>
 {/if}

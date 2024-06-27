@@ -1,4 +1,5 @@
 import { BuiltinAndChip, BuiltinNAndChip, BuiltinNOrChip, BuiltinNotChip, BuiltinOrChip } from '$lib/backend/builtin-chips';
+import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
 import type { Chip } from '$lib/backend/chip';
 import { Pin } from '$lib/backend/pin';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/backend/power-state';
@@ -117,6 +118,9 @@ export class BackendAdapter extends Adapter<number> {
 				break;
 			case 'nor':
 				chip = new BuiltinNOrChip(inputPins, outputPins);
+				break;
+			case 'xor':
+				chip = new BuiltinXOrChip(inputPins, outputPins);
 				break;
 			case 'not':
 				chip = new BuiltinNotChip(inputPins, outputPins);
