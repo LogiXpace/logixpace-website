@@ -163,7 +163,7 @@ export class ChipPin<T> implements WireEntity<T> {
       this.outletLineCollider.endPosition.x,
       this.outletLineCollider.endPosition.y,
       new CanvasStyle({
-        strokeColor: this.activated ? new RGB(0, 0, 0) : new RGB(150, 150, 150),
+        strokeColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR,
         lineWidth: DEFUALTS.PIN_OUTLET_LINE_WIDTH
       })
     )
@@ -174,7 +174,7 @@ export class ChipPin<T> implements WireEntity<T> {
       this.outletPosition.y,
       this.outletCollider.radius,
       new CanvasStyle({
-        fillColor: this.activated ? new RGB(0, 0, 0) : new RGB(150, 150, 150)
+        fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR,
       })
     )
   }

@@ -216,7 +216,7 @@ export class IO<T> {
 			this.outletPosition.y,
 			new CanvasStyle({
 				lineWidth: DEFUALTS.PIN_OUTLET_LINE_WIDTH,
-				strokeColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
+				strokeColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
 
@@ -226,7 +226,7 @@ export class IO<T> {
 			this.outletCollider.position.y,
 			this.outletCollider.radius,
 			new CanvasStyle({
-				fillColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
+				fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
 
@@ -236,7 +236,7 @@ export class IO<T> {
 			this.collider.position.y,
 			this.collider.radius,
 			new CanvasStyle({
-				fillColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
+				fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
 	}
