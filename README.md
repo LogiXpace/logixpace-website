@@ -12,3 +12,4 @@
 - [x] add a new builtin chip
 - [x] create an adder
 - [ ] make the fronted ui look cool
+- [ ] fix the bug where the connectoins wires
