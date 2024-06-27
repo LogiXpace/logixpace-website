@@ -46,8 +46,8 @@ export function drawLine(
 	style: CanvasStyle
 ) {
 	ctx.save();
-	style.set(ctx);
 	ctx.beginPath();
+	style.set(ctx);
 	ctx.moveTo(x1, y1);
 	ctx.lineTo(x2, y2);
 	style.apply(ctx);
