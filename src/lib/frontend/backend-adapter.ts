@@ -1,3 +1,5 @@
+import { BuiltinAndChip, BuiltinNAndChip, BuiltinNOrChip, BuiltinNotChip, BuiltinOrChip } from '$lib/backend/builtin-chips';
+import type { Chip } from '$lib/backend/chip';
 import { Pin } from '$lib/backend/pin';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/backend/power-state';
 import { Simulator } from '$lib/backend/simulator';
@@ -80,7 +82,54 @@ export class BackendAdapter extends Adapter<number> {
 		startPin.disconnectPin(endPin);
 	}
 
-	createChip(type: ChipType): void {}
+	createChip(type: ChipType, inputIds: number[], outputIds: number[]): void {
+		const inputPins = new Array(inputIds.length);
+		for (let i = 0; i < inputIds.length; i++) {
+			const pin = this.pins.get(inputIds[i]);
+			if (typeof pin === 'number' || pin === undefined) {
+				throw new Error('Invalid input pin ID');
+			}
+
+			inputPins[i] = pin;
+		}
+
+		const outputPins = new Array(outputIds.length);
+		for (let i = 0; i < outputIds.length; i++) {
+			const pin = this.pins.get(outputIds[i]);
+			if (typeof pin === 'number' || pin === undefined) {
+				throw new Error('Invalid output pin ID');
+			}
+
+			outputPins[i] = pin;
+		}
+
+		let chip: Chip | undefined = undefined;
+
+		switch (type) {
+			case 'and':
+				chip = new BuiltinAndChip(inputPins, outputPins);
+				break;
+			case 'nand':
+				chip = new BuiltinNAndChip(inputPins, outputPins);
+				break;
+			case 'or':
+				chip = new BuiltinOrChip(inputPins, outputPins);
+				break;
+			case 'nor':
+				chip = new BuiltinNOrChip(inputPins, outputPins);
+				break;
+			case 'not':
+				chip = new BuiltinNotChip(inputPins, outputPins);
+				break;
+
+			default:
+				break;
+		}
+
+		if (chip !== undefined) {
+			chip.process(this.simulator)
+		}
+	}
 
 	update(): void {
 		this.simulator.step();
