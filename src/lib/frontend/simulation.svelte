@@ -16,6 +16,7 @@
 		scale = 1,
 		scaleFactor = 1,
 		adapter,
+		onVoidContextMenuOpen = () => {},
 		simulationContext = $bindable()
 	}: Props<T> = $props();
 
@@ -37,7 +38,15 @@
 			canvas.height = window.innerHeight;
 		}
 
-		simulationContext = new SimulationContext({ ctx, offset, scale, scaleFactor, adapter });
+		simulationContext = new SimulationContext({
+			ctx,
+			offset,
+			scale,
+			scaleFactor,
+			adapter,
+			onVoidContextMenuOpen
+		});
+
 		window.addEventListener('resize', handleResize);
 
 		let prevFrame = 0;
