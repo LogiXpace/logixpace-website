@@ -27,7 +27,7 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
-	createChip(type: ChipType): void {
+	createChip(type: ChipType, inputIds: T[], outputIds: T[]): void {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
