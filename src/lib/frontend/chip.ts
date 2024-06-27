@@ -45,7 +45,7 @@ export class Chip<T> {
 
     const width = 10 + textWidth + 10;
     const maxPins = Math.max(inputPins.length, outputPins.length);
-    const height = maxPins * (DEFUALTS.PIN_OUTLET_SIZE + 10) + DEFUALTS.CHIP_FONT_SIZE * 4 / 3;
+    const height = maxPins * (DEFUALTS.PIN_OUTLET_SIZE + 5) + DEFUALTS.CHIP_FONT_SIZE * 4 / 3;
 
     this.collider = new BoxCollider(position, width, height);
 
