@@ -34,6 +34,8 @@ export interface SimulationContextProps<T> {
 	scale: number;
 	scaleFactor: number;
 	adapter: Adapter<T>;
+
+	onVoidContextMenuOpen: (position: Vector2D) => void;
 }
 
 type HoverAndSelectEntity<T> = WirePoint<T> | IO<T> | Chip<T> | ChipPin<T>;
@@ -72,14 +74,17 @@ export class SimulationContext<T> {
 
 	private wirePointPending: WirePoint<T> | undefined = undefined;
 
+	private onVoidContextMenuOpen: (position: Vector2D) => void;
+
 	private adapter: Adapter<T>;
 
-	constructor({ ctx, offset, scale, scaleFactor, adapter }: SimulationContextProps<T>) {
+	constructor({ ctx, offset, scale, onVoidContextMenuOpen, scaleFactor, adapter }: SimulationContextProps<T>) {
 		this.ctx = ctx;
 		this.offset = offset.clone();
 		this.scale = scale;
 		this.scaleFactor = scaleFactor;
 		this.adapter = adapter;
+		this.onVoidContextMenuOpen = onVoidContextMenuOpen;
 
 		this.ioTree = new QuadTree(
 			QUADTREE_MAX_LEVEL,
@@ -153,6 +158,7 @@ export class SimulationContext<T> {
 		this.ctx.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
 		this.ctx.canvas.addEventListener('wheel', this.handleWheel.bind(this));
 		this.ctx.canvas.addEventListener('dblclick', this.handleDblClick.bind(this));
+		this.ctx.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
 		window.addEventListener('keydown', this.handleKeyDown.bind(this));
 		window.addEventListener('keyup', this.handleKeyUp.bind(this));
 	}
@@ -193,7 +199,24 @@ export class SimulationContext<T> {
 		return chipPin;
 	}
 
-	addCustomChip(param: Omit<ChipProps<T>, 'textWidth'>) {
+	addChip(
+		chipType: ChipType,
+		inputNames: string[],
+		outputNames: string[],
+		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins'>
+	) {
+		const inputPins: ChipPin<T>[] = new Array(inputNames.length);
+
+		for (let i = 0; i < inputNames.length; i++) {
+			inputPins[i] = this.addChipPin({ namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: inputNames[i] }) });
+		}
+
+		const outputPins: ChipPin<T>[] = new Array(outputNames.length);
+
+		for (let i = 0; i < outputNames.length; i++) {
+			outputPins[i] = this.addChipPin({ namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: outputNames[i] }) });
+		}
+
 		this.ctx.save();
 		this.ctx.textAlign = 'center';
 		this.ctx.textBaseline = 'middle';
@@ -204,27 +227,9 @@ export class SimulationContext<T> {
 		const textWidth = measure.width;
 		this.ctx.restore();
 
-		const chip = new Chip({ ...param, textWidth });
+		const chip = new Chip({ ...param, inputPins, outputPins, textWidth });
 		this.chipTree.insert(chip, chip.collider);
-
-		this.queryAll();
-
-		return chip;
-	}
-
-	addBuiltInChip(chipType: ChipType) {
-		this.ctx.save();
-		this.ctx.textAlign = 'center';
-		this.ctx.textBaseline = 'middle';
-		this.ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
-		this.ctx.lineWidth = DEFUALTS.CHIP_FONT_STROKE_WIDTH;
-		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`
-		const measure = this.ctx.measureText(param.name);
-		const textWidth = measure.width;
-		this.ctx.restore();
-
-		const chip = new Chip({ ...param, textWidth });
-		this.chipTree.insert(chip, chip.collider);
+		this.adapter.createChip(chipType, inputPins.map(pin => pin.namedPin.id), outputPins.map(pin => pin.namedPin.id));
 
 		this.queryAll();
 
@@ -241,6 +246,7 @@ export class SimulationContext<T> {
 		this.ctx.canvas.removeEventListener('mouseup', this.handleMouseUp.bind(this));
 		this.ctx.canvas.removeEventListener('mousemove', this.handleMouseMove.bind(this));
 		this.ctx.canvas.removeEventListener('wheel', this.handleWheel.bind(this));
+		this.ctx.canvas.removeEventListener('contextmenu', this.handleContextMenu.bind(this));
 		this.ctx.canvas.removeEventListener('dblclick', this.handleDblClick.bind(this));
 		window.removeEventListener('keydown', this.handleKeyDown.bind(this));
 		window.removeEventListener('keyup', this.handleKeyUp.bind(this));
@@ -248,6 +254,12 @@ export class SimulationContext<T> {
 
 	handleKeyDown(e: KeyboardEvent) {
 		this.keyboardInput.handleKeyPressed(e.key);
+	}
+
+	handleContextMenu(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
 	}
 
 	handleKeyUp(e: KeyboardEvent) {
@@ -567,6 +579,8 @@ export class SimulationContext<T> {
 
 		if (this.mouseInput.isLeftDown) {
 			this.handleLeftMouseDown(mouseWorldPosition, mouseCollider);
+		} else if (this.mouseInput.isRightDown) {
+			this.onVoidContextMenuOpen(this.mouseInput.downPosition.clone());
 		}
 	}
 
@@ -816,6 +830,8 @@ export class SimulationContext<T> {
 	}
 
 	update(currTime: number, deltaTime: number) {
+		this.adapter.update();
+
 		for (const wirePoint of this.wirePoints) {
 			wirePoint.isActivated = this.adapter.getPowerState(wirePoint.pinId) === POWER_STATE_HIGH;
 		}
@@ -835,6 +851,5 @@ export class SimulationContext<T> {
 		this.wireTree.cleanup();
 		this.chipPinTree.cleanup();
 		this.chipTree.cleanup();
-		this.adapter.update();
 	}
 }
