@@ -39,7 +39,7 @@ export class Chip<T> {
     inputPins,
     outputPins
   }: ChipProps<T>) {
-    this.position = position;
+    this.position = position.clone();
     this.name = name;
     this.color = color;
 
