@@ -6,7 +6,7 @@ import { POWER_STATE_HIGH, POWER_STATE_LOW } from '../power-state';
 import { expect } from 'vitest';
 import { test } from 'vitest';
 import { Simulator } from '../simulator';
-import { expectBuiltinChipOutputCorrectly } from '$lib/chim/helpers/test';
+import { expectBuiltinChipOutputCorrectly } from '../test';
 
 describe('builtin or chip', () => {
 	describe('should be created succesfully', () => {
