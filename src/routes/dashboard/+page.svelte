@@ -22,8 +22,8 @@
 			<ul>
 				{#each menuItems as item}
 					<li class="px-4 py-2 transition-colors duration-300 hover:bg-gray-700">
-						<a href="{item.href}" class="flex items-center space-x-2">
-							<i class="{`fas fa-${item.icon}`}"></i>
+						<a href={item.href} class="flex items-center space-x-2">
+							<i class={`fas fa-${item.icon}`}></i>
 							<span>{item.name}</span>
 						</a>
 					</li>

@@ -22,7 +22,7 @@ export class BuiltinXOrChip extends BuiltinChip {
 	process(simulator) {
 		const a = this.inputPins[0].powerState === POWER_STATE_HIGH;
 		const b = this.inputPins[1].powerState === POWER_STATE_HIGH;
-		
+
 		const x = !(a || b);
 		const y = a && b;
 		const o = !(x || y);

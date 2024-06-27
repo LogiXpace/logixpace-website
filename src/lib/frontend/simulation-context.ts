@@ -78,7 +78,14 @@ export class SimulationContext<T> {
 
 	private adapter: Adapter<T>;
 
-	constructor({ ctx, offset, scale, onVoidContextMenuOpen, scaleFactor, adapter }: SimulationContextProps<T>) {
+	constructor({
+		ctx,
+		offset,
+		scale,
+		onVoidContextMenuOpen,
+		scaleFactor,
+		adapter
+	}: SimulationContextProps<T>) {
 		this.ctx = ctx;
 		this.offset = offset.clone();
 		this.scale = scale;
@@ -208,13 +215,17 @@ export class SimulationContext<T> {
 		const inputPins: ChipPin<T>[] = new Array(inputNames.length);
 
 		for (let i = 0; i < inputNames.length; i++) {
-			inputPins[i] = this.addChipPin({ namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: inputNames[i] }) });
+			inputPins[i] = this.addChipPin({
+				namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: inputNames[i] })
+			});
 		}
 
 		const outputPins: ChipPin<T>[] = new Array(outputNames.length);
 
 		for (let i = 0; i < outputNames.length; i++) {
-			outputPins[i] = this.addChipPin({ namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: outputNames[i] }) });
+			outputPins[i] = this.addChipPin({
+				namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: outputNames[i] })
+			});
 		}
 
 		this.ctx.save();
@@ -222,14 +233,18 @@ export class SimulationContext<T> {
 		this.ctx.textBaseline = 'middle';
 		this.ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
 		this.ctx.lineWidth = DEFUALTS.CHIP_FONT_STROKE_WIDTH;
-		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`
+		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`;
 		const measure = this.ctx.measureText(param.name);
 		const textWidth = measure.width;
 		this.ctx.restore();
 
 		const chip = new Chip({ ...param, inputPins, outputPins, textWidth });
 		this.chipTree.insert(chip, chip.collider);
-		this.adapter.createChip(chipType, inputPins.map(pin => pin.namedPin.id), outputPins.map(pin => pin.namedPin.id));
+		this.adapter.createChip(
+			chipType,
+			inputPins.map((pin) => pin.namedPin.id),
+			outputPins.map((pin) => pin.namedPin.id)
+		);
 
 		this.queryAll();
 

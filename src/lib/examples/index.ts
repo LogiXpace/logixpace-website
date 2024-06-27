@@ -5,10 +5,10 @@ import { circuit2 } from './circuit2';
 import { circuit3 } from './circuit3';
 
 export interface ReturnExample {
-  init: () => void;
-  run: (iterations?: number) => void;
-  pins: Pin[];
-  expectPowerStates: PowerState[];
+	init: () => void;
+	run: (iterations?: number) => void;
+	pins: Pin[];
+	expectPowerStates: PowerState[];
 }
 
 export const circuits: (() => ReturnExample)[] = [circuit1, circuit2, circuit3];

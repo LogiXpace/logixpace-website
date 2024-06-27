@@ -24,13 +24,13 @@
 	<div class="flex min-h-screen items-center justify-center bg-transparent">
 		<div class="w-full max-w-md rounded-lg bg-gray-800 p-8 text-white shadow-md">
 			<h2 class=" mb-6 text-center text-3xl font-bold">Sign Up</h2>
-			<form on:submit="{handleSubmit}">
+			<form on:submit={handleSubmit}>
 				<div class="mb-4">
 					<label class="mb-2 block text-sm font-bold text-gray-400" for="name">Name</label>
 					<input
 						id="name"
 						type="text"
-						bind:value="{form.name}"
+						bind:value={form.name}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>
@@ -40,7 +40,7 @@
 					<input
 						id="email"
 						type="email"
-						bind:value="{form.email}"
+						bind:value={form.email}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>
@@ -50,7 +50,7 @@
 					<input
 						id="password"
 						type="password"
-						bind:value="{form.password}"
+						bind:value={form.password}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>
@@ -62,7 +62,7 @@
 					<input
 						id="confirmPassword"
 						type="password"
-						bind:value="{form.confirmPassword}"
+						bind:value={form.confirmPassword}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>

@@ -1,4 +1,10 @@
-import { BuiltinAndChip, BuiltinNAndChip, BuiltinNOrChip, BuiltinNotChip, BuiltinOrChip } from '$lib/backend/builtin-chips';
+import {
+	BuiltinAndChip,
+	BuiltinNAndChip,
+	BuiltinNOrChip,
+	BuiltinNotChip,
+	BuiltinOrChip
+} from '$lib/backend/builtin-chips';
 import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
 import type { Chip } from '$lib/backend/chip';
 import { Pin } from '$lib/backend/pin';
@@ -131,11 +137,11 @@ export class BackendAdapter extends Adapter<number> {
 		}
 
 		if (chip !== undefined) {
-			chip.process(this.simulator)
+			chip.process(this.simulator);
 		}
 	}
 
 	update(): void {
-		this.simulator.step();
+		this.simulator.simulate(1000);
 	}
 }
