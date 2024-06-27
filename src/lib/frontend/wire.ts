@@ -71,7 +71,7 @@ export class Wire<T> {
 			this.endPosition.x,
 			this.endPosition.y,
 			new CanvasStyle({
-				strokeColor: this.start.activated ? new RGB(100, 100, 100, 1) : new RGB(75, 50, 255, 1),
+				strokeColor: this.start.activated ? new RGB(75, 50, 255, 1) : new RGB(100, 100, 100, 1),
 				lineWidth: DEFUALTS.WIRE_WIDTH
 			})
 		);

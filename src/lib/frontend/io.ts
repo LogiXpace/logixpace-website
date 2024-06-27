@@ -16,7 +16,7 @@ import type { NamedPin } from './named-pin';
 import { Pin, type PinProps } from './pin';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 import type { Wire } from './wire';
-import { POWER_STATE_HIGH } from './state';
+import { POWER_STATE_HIGH, POWER_STATE_LOW } from './state';
 
 export interface IOProps<T> extends PinProps<T> {
 	color?: Color;
@@ -216,7 +216,7 @@ export class IO<T> {
 			this.outletPosition.y,
 			new CanvasStyle({
 				lineWidth: DEFUALTS.PIN_OUTLET_LINE_WIDTH,
-				strokeColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
+				strokeColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
 			})
 		);
 
@@ -226,7 +226,7 @@ export class IO<T> {
 			this.outletCollider.position.y,
 			this.outletCollider.radius,
 			new CanvasStyle({
-				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
+				fillColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
 			})
 		);
 
@@ -236,7 +236,7 @@ export class IO<T> {
 			this.collider.position.y,
 			this.collider.radius,
 			new CanvasStyle({
-				fillColor: this.color.clone(this.namedPin.powerState === 0 ? 0.7 : 1)
+				fillColor: this.color.clone(this.namedPin.powerState === POWER_STATE_LOW ? 0.7 : 1)
 			})
 		);
 	}
