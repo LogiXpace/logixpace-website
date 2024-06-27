@@ -34,7 +34,7 @@
 
 {#if simulationContext !== undefined}
 	<div
-		class="fixed z-10 flex min-w-56 flex-col overflow-hidden rounded-md bg-gray-500 p-1 shadow-lg data-[open=false]:hidden"
+		class="fixed z-10 flex min-w-56 flex-col overflow-hidden rounded-md bg-gray-800 p-1 shadow-lg data-[open=false]:hidden"
 		data-open={isContextMenuOpen ? 'true' : 'false'}
 		style:top="{contextMenuPosition.y}px"
 		style:left="{contextMenuPosition.x}px"
@@ -45,7 +45,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addChip('and', ['a', 'b'], ['o'], {
@@ -60,7 +60,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addChip('or', ['a', 'b'], ['o'], {
@@ -75,7 +75,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addChip('xor', ['a', 'b'], ['o'], {
@@ -90,7 +90,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addChip('not', ['a'], ['o'], {
@@ -105,7 +105,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addIO({
@@ -124,7 +124,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="flex h-full w-full items-center rounded-sm bg-gray-700 px-2 py-1 text-white"
+			class="flex h-full w-full items-center rounded-sm bg-gray-900 px-2 py-1 text-white"
 			onclick={() => {
 				isContextMenuOpen = false;
 				simulationContext.addIO({
