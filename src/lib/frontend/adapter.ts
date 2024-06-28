@@ -37,6 +37,11 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
+	destroyChip(inputPinIds: T[], outputPinIds: T[]): void {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
 	connect(start: T, end: T): void {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
