@@ -107,14 +107,6 @@ export class Chip<T> {
 	move(delta: Vector2D) {
 		this.position.addVector(delta);
 		this.updateCollider();
-
-		for (let i = 0; i < this.inputPins.length; i++) {
-			this.inputPins[i].move(delta);
-		}
-
-		for (let i = 0; i < this.outputPins.length; i++) {
-			this.outputPins[i].move(delta);
-		}
 	}
 
 	draw(ctx: CanvasRenderingContext2D, currTime: number, deltaTime: number) {
@@ -133,13 +125,12 @@ export class Chip<T> {
 			.clone()
 			.addVector(new Vector2D(this.collider.width, this.collider.height).divScalar(2));
 
-		ctx.save();
+		ctx.beginPath();
 		ctx.lineWidth = DEFUALTS.CHIP_FONT_STROKE_WIDTH;
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
-		ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
+		ctx.fillStyle = 'white';
 		ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`;
 		ctx.fillText(this.name, centerPosition.x, centerPosition.y, this.collider.width);
-		ctx.restore();
 	}
 }
