@@ -14,11 +14,10 @@ export function drawRectangle(
 	height: number,
 	style: CanvasStyle
 ) {
-	ctx.save();
+	ctx.beginPath();
 	style.set(ctx);
 	ctx.rect(x, y, width, height);
 	style.apply(ctx);
-	ctx.restore();
 }
 
 // Function to draw a circle
@@ -29,12 +28,10 @@ export function drawCircle(
 	radius: number,
 	style: CanvasStyle
 ) {
-	ctx.save();
-	style.set(ctx);
 	ctx.beginPath();
+	style.set(ctx);
 	ctx.arc(x, y, radius, 0, Math.PI * 2);
 	style.apply(ctx);
-	ctx.restore();
 }
 
 export function drawLine(
@@ -45,11 +42,9 @@ export function drawLine(
 	y2: number,
 	style: CanvasStyle
 ) {
-	ctx.save();
 	ctx.beginPath();
 	style.set(ctx);
 	ctx.moveTo(x1, y1);
 	ctx.lineTo(x2, y2);
 	style.apply(ctx);
-	ctx.restore();
 }
