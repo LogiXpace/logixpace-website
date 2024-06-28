@@ -21,12 +21,13 @@ import { POWER_STATE_HIGH, POWER_STATE_LOW } from './state';
 import { Chip, type ChipProps } from './chip';
 import { ChipPin, type ChipPinProps } from './chip-pin';
 import type { ChipType } from './chip-types';
+import { SimulationEntityManager } from './simulation-entity-manager';
+import { SimulationCreatingWireManager } from './simulation-creating-wire-manager';
 
 const QUADTREE_MAX_CAPACITY = 10;
 const QUADTREE_MAX_LEVEL = 15;
 const QUADTREE_MAX_NUMBER_OF_VALUES = 1e2;
 const QUADTREE_SIZE = 50 * QUADTREE_MAX_NUMBER_OF_VALUES;
-const QUADTREE_POSITION = new Vector2D(-QUADTREE_SIZE / 2, -QUADTREE_SIZE / 2);
 
 export interface SimulationContextProps<T> {
 	ctx: CanvasRenderingContext2D;
@@ -43,20 +44,8 @@ type HoverAndSelectEntity<T> = WirePoint<T> | IO<T> | Chip<T> | ChipPin<T>;
 export class SimulationContext<T> {
 	private ctx: CanvasRenderingContext2D;
 
-	private ioTree: QuadTree<IO<T>>;
-	private ios: Set<IO<T>> = new Set();
-
-	private wirePointTree: QuadTree<WirePoint<T>>;
-	private wirePoints: Set<WirePoint<T>> = new Set();
-
-	private wireTree: QuadTree<Wire<T>>;
-	private wires: Set<Wire<T>> = new Set();
-
-	private chipTree: QuadTree<Chip<T>>;
-	private chips: Set<Chip<T>> = new Set();
-
-	private chipPinTree: QuadTree<ChipPin<T>>;
-	private chipPins: Set<ChipPin<T>> = new Set();
+	private entityManager: SimulationEntityManager<T>;
+	private wireCreatingManager: SimulationCreatingWireManager<T>;
 
 	private selected = new Set<HoverAndSelectEntity<T>>();
 
@@ -71,8 +60,6 @@ export class SimulationContext<T> {
 
 	private isPanning = false;
 	private isDragging = false;
-
-	private wirePointPending: WirePoint<T> | undefined = undefined;
 
 	private onVoidContextMenuOpen: (position: Vector2D) => void;
 
@@ -93,41 +80,14 @@ export class SimulationContext<T> {
 		this.adapter = adapter;
 		this.onVoidContextMenuOpen = onVoidContextMenuOpen;
 
-		this.ioTree = new QuadTree(
-			QUADTREE_MAX_LEVEL,
-			QUADTREE_MAX_CAPACITY,
-			QUADTREE_POSITION,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE
-		);
-		this.wirePointTree = new QuadTree(
-			QUADTREE_MAX_LEVEL,
-			QUADTREE_MAX_CAPACITY,
-			QUADTREE_POSITION,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE
-		);
-		this.wireTree = new QuadTree(
-			QUADTREE_MAX_LEVEL,
-			QUADTREE_MAX_CAPACITY,
-			QUADTREE_POSITION,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE
-		);
-		this.chipTree = new QuadTree(
-			QUADTREE_MAX_LEVEL,
-			QUADTREE_MAX_CAPACITY,
-			QUADTREE_POSITION,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE
-		);
-		this.chipPinTree = new QuadTree(
-			QUADTREE_MAX_LEVEL,
-			QUADTREE_MAX_CAPACITY,
-			QUADTREE_POSITION,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE
-		);
+		this.entityManager = new SimulationEntityManager({
+			maxCapacity: QUADTREE_MAX_CAPACITY,
+			maxLevel: QUADTREE_MAX_LEVEL,
+			size: QUADTREE_SIZE,
+			adapter
+		});
+
+		this.wireCreatingManager = new SimulationCreatingWireManager(this.entityManager);
 
 		this.initEvents();
 	}
@@ -136,11 +96,7 @@ export class SimulationContext<T> {
 		const screenCollider = this.getScreenCollider();
 
 		const start = performance.now();
-		this.ios = this.ioTree.query(screenCollider);
-		this.wirePoints = this.wirePointTree.query(screenCollider);
-		this.wires = this.wireTree.query(screenCollider);
-		this.chips = this.chipTree.query(screenCollider);
-		this.chipPins = this.chipPinTree.query(screenCollider);
+		this.entityManager.query(screenCollider);
 		const end = performance.now();
 
 		// console.group();
@@ -172,7 +128,7 @@ export class SimulationContext<T> {
 
 	addIO(param: IOProps<T>) {
 		const io = new IO(param);
-		this.ioTree.insert(io, io.bound);
+		this.entityManager.insertIO(io);
 
 		this.queryAll();
 
@@ -181,7 +137,7 @@ export class SimulationContext<T> {
 
 	addWirePoint(param: Omit<WirePointProps<T>, 'pinId'>) {
 		const wirePoint = new WirePoint({ ...param, pinId: this.adapter.createPin(POWER_STATE_LOW) });
-		this.wirePointTree.insert(wirePoint, wirePoint.collider);
+		this.entityManager.insertWirePoint(wirePoint);
 
 		this.queryAll();
 
@@ -190,7 +146,7 @@ export class SimulationContext<T> {
 
 	addWire(param: WireProps<T>) {
 		const wire = new Wire(param);
-		this.wireTree.insert(wire, wire.collider);
+		this.entityManager.insertWire(wire);
 
 		this.queryAll();
 
@@ -199,7 +155,7 @@ export class SimulationContext<T> {
 
 	addChipPin(param: { namedPin: ChipPinProps<T>['namedPin'] }) {
 		const chipPin = new ChipPin({ ...param, position: new Vector2D(), direction: DIRECTION.LEFT });
-		this.chipPinTree.insert(chipPin, chipPin.outletCollider);
+		this.entityManager.insertChipPin(chipPin);
 
 		this.queryAll();
 
@@ -228,7 +184,7 @@ export class SimulationContext<T> {
 			});
 		}
 
-		this.ctx.save();
+		this.ctx.beginPath();
 		this.ctx.textAlign = 'center';
 		this.ctx.textBaseline = 'middle';
 		this.ctx.fillStyle = DEFUALTS.CHIP_FONT_COLOR;
@@ -236,10 +192,9 @@ export class SimulationContext<T> {
 		this.ctx.font = `${DEFUALTS.CHIP_FONT_SIZE}px ${DEFUALTS.CHIP_FONT_FAMILY}`;
 		const measure = this.ctx.measureText(param.name);
 		const textWidth = measure.width;
-		this.ctx.restore();
 
 		const chip = new Chip({ ...param, inputPins, outputPins, textWidth });
-		this.chipTree.insert(chip, chip.collider);
+		this.entityManager.insertChip(chip);
 		this.adapter.createChip(
 			chipType,
 			inputPins.map((pin) => pin.namedPin.id),
@@ -288,84 +243,26 @@ export class SimulationContext<T> {
 		const mouseWorldPosition = this.screenVectorToWorldVector(this.mouseInput.downPosition);
 		const mouseCollider = new PointCollider(mouseWorldPosition);
 
-		if (this.wirePointPending === undefined) {
-			const wire = this.wireTree.queryByPoint(mouseCollider);
-			console.log('wire', wire);
-			// if (wire !== undefined) {
-			// 	// get the closest point to the line
-			// 	const closestPoint = getClosestPoint(
-			// 		mouseWorldPosition,
-			// 		wire.startPosition,
-			// 		wire.endPosition,
-			// 		DEFUALTS.WIRE_WIDTH
-			// 	);
+		if (!this.wireCreatingManager.isCreating()) {
+			const wire = this.entityManager.queryWireByPoint(mouseCollider);
+			if (wire !== undefined) {
+				// get the closest point to the line
+				const closestPoint = getClosestPoint(
+					mouseWorldPosition,
+					wire.startPosition,
+					wire.endPosition,
+					DEFUALTS.WIRE_WIDTH
+				);
 
-			// 	// make a new wire point on the closest point
-			// 	const closestWirePoint = this.addWirePoint({
-			// 		position: closestPoint // make sure it refrences the closest position
-			// 	});
-
-			// 	// add it to the scene to be able to be drawn
-			// 	this.wirePoints.add(closestWirePoint);
-
-			// 	// make two wires from the closest point
-			// 	// one the half next to point and the other half
-			// 	// luckily, we can reuse the wire that was collided as one of the half
-
-			// 	// wire that starts from the closest point and end at the collided wire end position
-			// 	const halfWire1 = this.addWire({
-			// 		start: closestWirePoint,
-			// 		startPosition: closestPoint,
-			// 		end: wire.end,
-			// 		endPosition: wire.endPosition,
-			// 	});
-
-			// 	// remove the connection from the end
-			// 	wire.end.removeWire(wire);
-
-			// 	// wire that starts from its original start position and ends at the closest point
-			// 	const halfWire2 = wire;
-			// 	halfWire2.endPosition = closestPoint;
-			// 	halfWire2.end = closestWirePoint;
-
-			// 	// add the connection to the closes wire point
-			// 	closestWirePoint.addWire(halfWire2);
-
-			// 	// delete and insert again to update it in the quad tree
-			// 	this.wireTree.remove(wire, wire.collider); // remove it with the old collider
-			// 	halfWire2.updateCollider(); // update the collider to reflect the new end position
-			// 	this.wireTree.insert(halfWire2, halfWire2.collider); // insert
-
-			// 	// add the half wire to the scene to be drawn.
-			// 	// no need to add the other half wire, because it was already on the screen to be able to be dblclicked
-			// 	this.wires.add(halfWire1);
-
-			// 	// assign a new wire point to become pending
-			// 	this.wirePointPending = new WirePoint({
-			// 		// IMPORTANT: to clone instead of refrencing, because it may also modify
-			// 		// other variables that refrenceing this position to changed when wire point pending is moving
-			// 		position: closestPoint.clone()
-			// 	});
-
-			// 	// create a new wire that is connecting the closest wire point to the wire point pending
-			// 	const connectedWirePending = new Wire({
-			// 		start: closestWirePoint,
-			// 		// IMPORTANT: refrence instead of clone, to be autoamatically drawn properly whenever the refrences is changed
-			// 		startPosition: closestPoint,
-			// 		end: this.wirePointPending,
-			// 		endPosition: this.wirePointPending.position
-			// 	});
-
-			// 	// add it to the scene to be drawn again
-			// 	this.wires.add(connectedWirePending);
-			// }
+				this.wireCreatingManager.createAndSplitOn(closestPoint, wire);
+			}
 		}
 	}
 
 	handleLeftMouseDown(mouseWorldPosition: Vector2D, mouseCollider: PointCollider) {
 		if (this.hover === undefined) {
-			if (this.wirePointPending !== undefined) {
-				const wire = this.wireTree.queryByPoint(mouseCollider);
+			if (this.wireCreatingManager.isCreating()) {
+				const wire = this.entityManager.queryWireByPoint(mouseCollider);
 				if (wire !== undefined) {
 					// get the closest point to the line
 					const closestPoint = getClosestPoint(
@@ -375,95 +272,9 @@ export class SimulationContext<T> {
 						DEFUALTS.WIRE_WIDTH
 					);
 
-					// reuse the wire point pending as the closest wire point
-					const closestWirePoint = this.wirePointPending;
-					closestWirePoint.pinId = this.adapter.createPin(POWER_STATE_LOW);
-					this.wirePointPending = undefined; // the wire point pending operation is fininshed
-
-					// set the wire point pending position as the closest point position
-					closestWirePoint.position = closestPoint;
-					closestWirePoint.updateCollider(); // update the collider to reflect the updated position.
-					this.wirePointTree.insert(closestWirePoint, closestWirePoint.collider); // add it into the qaud tree
-
-					// add it to the scene to be able to be drawn
-					this.wirePoints.add(closestWirePoint);
-
-					// make two wires from the closest point
-					// one the half next to point and the other half
-					// luckily, we can reuse the wire that was collided as one of the half
-
-					// wire that starts from the closest point and end at the collided wire end position
-					const halfWire1 = this.addWire({
-						start: closestWirePoint,
-						startPosition: closestPoint,
-						end: wire.end,
-						endPosition: wire.endPosition
-					});
-
-					this.adapter.connect(closestWirePoint.pinId, wire.end.pinId);
-
-					// remove the connection to the end
-					wire.end.removeWire(wire);
-					this.adapter.disconnect(wire.start.pinId, wire.end.pinId);
-
-					// wire that starts from its original start position and ends at the closest point
-					const halfWire2 = wire;
-					halfWire2.endPosition = closestPoint;
-					halfWire2.end = closestWirePoint;
-
-					this.adapter.connect(halfWire2.start.pinId, closestWirePoint.pinId);
-
-					// add the connection to the closes wire point
-					closestWirePoint.addWire(halfWire2);
-
-					// delete and insert again to update it in the quad tree
-					this.wireTree.remove(wire, wire.collider); // remove it with the old collider
-					halfWire2.updateCollider(); // update the collider to reflect the new end position
-					this.wireTree.insert(halfWire2, halfWire2.collider); // insert
-
-					// add the half wire to the scene to be drawn.
-					// no need to add the other half wire, because it was already on the screen to be able to be dblclicked
-					this.wires.add(halfWire1);
-
-					const connectedWirePending = closestWirePoint.wires[0];
-					connectedWirePending.end = closestWirePoint;
-					connectedWirePending.endPosition = closestPoint; // update the wire end position
-					connectedWirePending.updateCollider(); // update the collider to reflect the updated position.
-					this.wireTree.insert(connectedWirePending, connectedWirePending.collider); // at last, insert it into quad tree as it is no longer draged
-
-					this.adapter.connect(connectedWirePending.start.pinId, connectedWirePending.end.pinId);
+					this.wireCreatingManager.createAndSplitOn(closestPoint, wire);
 				} else {
-					const reservedWirePoint = this.wirePointPending;
-
-					// insert it to the quad tree and add it to be drawn
-					this.wirePointTree.insert(reservedWirePoint, reservedWirePoint.collider);
-					this.wirePoints.add(reservedWirePoint);
-
-					// update wire that is connected to it and insert into the quadtree
-					const reservedWire = reservedWirePoint.wires[0];
-					reservedWire.updateCollider();
-					this.wireTree.insert(reservedWire, reservedWire.collider);
-
-					const start = reservedWire.start;
-					reservedWirePoint.pinId = this.adapter.createPin(this.adapter.getPowerState(start.pinId));
-					this.adapter.connect(start.pinId, reservedWirePoint.pinId);
-
-					// create a new wire point
-					this.wirePointPending = new WirePoint({
-						position: reservedWirePoint.position.clone(),
-						pinId: -1
-					});
-
-					// a wire connecting resserved wire point and the newly dragging wire point
-					const wire = new Wire({
-						start: reservedWirePoint,
-						startPosition: reservedWirePoint.position,
-						end: this.wirePointPending,
-						endPosition: this.wirePointPending.position
-					});
-
-					// to be drawn, add it to the wires
-					this.wires.add(wire);
+					this.wireCreatingManager.create();
 				}
 			} else {
 				this.isPanning = true;
@@ -477,99 +288,20 @@ export class SimulationContext<T> {
 			(this.hover instanceof IO && this.hover.isOutletHovering) ||
 			(this.hover instanceof ChipPin && this.hover.isOutletHovering)
 		) {
-			if (this.wirePointPending === undefined) {
-				// create a new wire point
-				// @ts-expect-error
-				this.wirePointPending = new WirePoint({
-					position: this.hover.outletPosition.clone(),
-					pinId: -1
-				});
-
-				// a wire connecting resserved wire point and the newly dragging wire point
-				const wire = new Wire({
-					start: this.hover,
-					startPosition: this.hover.outletPosition,
-					end: this.wirePointPending,
-					endPosition: this.wirePointPending.position
-				});
-
-				// to be drawn, add it to the wires
-				this.wires.add(wire);
+			if (!this.wireCreatingManager.isCreating()) {
+				this.wireCreatingManager.createOn(this.hover.outletPosition, this.hover);
 			} else {
-				// get the connected wire to the wire point
-				const connectedWire = this.wirePointPending.wires[0];
-
-				// set the end position to the outlet position
-				connectedWire.endPosition = this.hover.outletPosition;
-				connectedWire.end = this.hover;
-
-				// checks if the start and end are same
-				if (connectedWire.startPosition === connectedWire.endPosition) {
-					// delete the wire, wire that has the same start and end is not a wire.
-					this.wires.delete(connectedWire);
-				} else {
-					// update the collider and insert it into the quadtree for future querying
-					connectedWire.updateCollider();
-					this.wireTree.insert(connectedWire, connectedWire.collider);
-
-					// connect the wire with the io
-					this.hover.addWire(connectedWire);
-
-					const start = connectedWire.start;
-					this.adapter.connect(start.pinId, this.hover.pinId);
-				}
-
-				// finally, set the wire point pending to undefined (finished its processing)
-				this.wirePointPending = undefined;
+				this.wireCreatingManager.endOn(this.hover.outletPosition, this.hover);
 			}
 
 			return;
 		}
 
 		if (this.hover instanceof WirePoint && !this.keyboardInput.isKeyPressed('Control')) {
-			if (this.wirePointPending === undefined) {
-				// create a new wire point
-				this.wirePointPending = new WirePoint({
-					position: this.hover.position.clone(),
-					pinId: -1
-				});
-
-				// a wire connecting resserved wire point and the newly dragging wire point
-				const wire = new Wire({
-					start: this.hover,
-					startPosition: this.hover.position,
-					end: this.wirePointPending,
-					endPosition: this.wirePointPending.position
-				});
-
-				// to be drawn, add it to the wires
-				this.wires.add(wire);
+			if (!this.wireCreatingManager.isCreating()) {
+				this.wireCreatingManager.createOn(this.hover.position, this.hover);
 			} else {
-				// get the connected wire to the wire point
-				const connectedWire = this.wirePointPending.wires[0];
-
-				// set the end position to the outlet position
-				connectedWire.endPosition = this.hover.position;
-				connectedWire.end = this.hover;
-
-				// checks if the start and end are same
-				if (connectedWire.startPosition === connectedWire.endPosition) {
-					// delete the wire, wire that has the same start and end is not a wire.
-					this.wires.delete(connectedWire);
-				} else {
-					// update the collider and insert it into the quadtree for future querying
-					connectedWire.updateCollider();
-					this.wireTree.insert(connectedWire, connectedWire.collider);
-
-					// connect the wire with the wire point
-					this.hover.addWire(connectedWire);
-
-					const start = connectedWire.start;
-					this.adapter.connect(start.pinId, this.hover.pinId);
-				}
-
-				// finally, set the wire point pending to undefined (finished its processing)
-				this.wirePointPending = undefined;
+				this.wireCreatingManager.endOn(this.hover.position, this.hover);
 			}
 
 			return;
@@ -595,7 +327,21 @@ export class SimulationContext<T> {
 		if (this.mouseInput.isLeftDown) {
 			this.handleLeftMouseDown(mouseWorldPosition, mouseCollider);
 		} else if (this.mouseInput.isRightDown) {
-			this.onVoidContextMenuOpen(this.mouseInput.downPosition.clone());
+			if (this.hover !== undefined) {
+				if (this.hover instanceof Chip) {
+					this.entityManager.destroyChip(this.hover);
+				} else if (this.hover instanceof IO) {
+					this.entityManager.destroyIO(this.hover);
+				} else if (this.hover instanceof WirePoint) {
+					this.entityManager.destroyWirePoint(this.hover);
+				}
+
+				this.hover = undefined;
+			} else if (this.wireCreatingManager.isCreating()) {
+				this.wireCreatingManager.delete();
+			} else {
+				this.onVoidContextMenuOpen(this.mouseInput.downPosition.clone());
+			}
 		}
 	}
 
@@ -607,41 +353,47 @@ export class SimulationContext<T> {
 	}
 
 	moveWirePoint(wirePoint: WirePoint<T>, delta: Vector2D) {
-		this.wirePointTree.remove(wirePoint, wirePoint.collider);
+		this.entityManager.removeWirePoint(wirePoint);
 		wirePoint.move(delta);
-		this.wirePointTree.insert(wirePoint, wirePoint.collider);
+		this.entityManager.insertWirePoint(wirePoint);
 
 		for (let i = 0; i < wirePoint.wires.length; i++) {
 			const wire = wirePoint.wires[i];
-			this.wireTree.remove(wire, wire.collider);
+			this.entityManager.removeWire(wire);
 			wire.updateCollider();
-			this.wireTree.insert(wire, wire.collider);
+			this.entityManager.insertWire(wire);
 		}
 	}
 
 	moveIO(io: IO<T>, delta: Vector2D) {
-		this.ioTree.remove(io, io.bound);
+		this.entityManager.removeIO(io);
 		io.move(delta);
-		this.ioTree.insert(io, io.bound);
+		this.entityManager.insertIO(io);
 
 		for (let i = 0; i < io.wires.length; i++) {
 			const wire = io.wires[i];
-			this.wireTree.remove(wire, wire.collider);
+			this.entityManager.removeWire(wire);
 			wire.updateCollider();
-			this.wireTree.insert(wire, wire.collider);
+			this.entityManager.insertWire(wire);
 		}
 	}
 
 	moveChip(chip: Chip<T>, delta: Vector2D) {
-		this.chipTree.remove(chip, chip.collider);
+		this.entityManager.removeChip(chip);
 		chip.move(delta);
-		this.chipTree.insert(chip, chip.collider);
-	}
+		this.entityManager.insertChip(chip);
 
-	moveChipPin(chipPin: ChipPin<T>, delta: Vector2D) {
-		this.chipPinTree.remove(chipPin, chipPin.outletCollider);
-		chipPin.move(delta);
-		this.chipPinTree.insert(chipPin, chipPin.outletCollider);
+		for (let i = 0; i < chip.inputPins.length; i++) {
+			this.entityManager.removeChipPin(chip.inputPins[i]);
+			chip.inputPins[i].move(delta);
+			this.entityManager.insertChipPin(chip.inputPins[i]);
+		}
+
+		for (let i = 0; i < chip.outputPins.length; i++) {
+			this.entityManager.removeChipPin(chip.outputPins[i]);
+			chip.outputPins[i].move(delta);
+			this.entityManager.insertChipPin(chip.outputPins[i]);
+		}
 	}
 
 	handleMouseMove(mouseEvent: MouseEvent) {
@@ -652,9 +404,8 @@ export class SimulationContext<T> {
 			.clone()
 			.subVector(this.screenVectorToWorldVector(this.mouseInput.prevMovePosition));
 
-		if (this.wirePointPending !== undefined) {
-			this.wirePointPending.position.copy(mouseWorldPosition);
-			this.wirePointPending.updateCollider();
+		if (this.wireCreatingManager.isCreating()) {
+			this.wireCreatingManager.setPosition(mouseWorldPosition);
 		}
 
 		if (this.isPanning) {
@@ -668,8 +419,6 @@ export class SimulationContext<T> {
 					this.moveWirePoint(entity, delta);
 				} else if (entity instanceof Chip) {
 					this.moveChip(entity, delta);
-				} else if (entity instanceof ChipPin) {
-					this.moveChipPin(entity, delta);
 				}
 			}
 		} else {
@@ -700,22 +449,22 @@ export class SimulationContext<T> {
 			}
 		}
 
-		let queried: HoverAndSelectEntity<T> | undefined = this.ioTree.queryByPoint(mouseCollider);
+		let queried: HoverAndSelectEntity<T> | undefined = this.entityManager.queryIOByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.wirePointTree.queryByPoint(mouseCollider);
+		queried = this.entityManager.queryWirePointByPoint(mouseCollider)
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.chipTree.queryByPoint(mouseCollider);
+		queried = this.entityManager.queryChipByPoint(mouseCollider)
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.chipPinTree.queryByPoint(mouseCollider);
+		queried = this.entityManager.queryChipPinByPoint(mouseCollider)
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
@@ -734,7 +483,7 @@ export class SimulationContext<T> {
 		}
 
 		this.selected.add(element);
-		element.select(mouseCollider);
+		// element.select(mouseCollider);
 	}
 
 	deselect() {
@@ -784,27 +533,27 @@ export class SimulationContext<T> {
 	}
 
 	drawEntities(currTime: number, deltaTime: number) {
-		const wires = this.wires.difference(this.selected);
+		const wires = this.entityManager.wireQueries.difference(this.selected);
 		for (const wire of wires) {
 			wire.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const wirePoints = this.wirePoints.difference(this.selected);
+		const wirePoints = this.entityManager.wirePointQueries.difference(this.selected);
 		for (const wirePoint of wirePoints) {
 			wirePoint.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const ios = this.ios.difference(this.selected);
+		const ios = this.entityManager.ioQueries.difference(this.selected);
 		for (const io of ios) {
 			io.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const chipPins = this.chipPins.difference(this.selected);
+		const chipPins = this.entityManager.chipPinQueries.difference(this.selected);
 		for (const chipPin of chipPins) {
 			chipPin.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const chips = this.chips.difference(this.selected);
+		const chips = this.entityManager.chipQueries.difference(this.selected);
 		for (const chip of chips) {
 			chip.draw(this.ctx, currTime, deltaTime);
 		}
@@ -826,45 +575,16 @@ export class SimulationContext<T> {
 		this.drawGrid();
 
 		this.applyZoomAndPan();
-		drawRectangle(
-			this.ctx,
-			QUADTREE_POSITION.x,
-			QUADTREE_POSITION.y,
-			QUADTREE_SIZE,
-			QUADTREE_SIZE,
-			new CanvasStyle({
-				strokeColor: new RGB(0, 0, 0)
-			})
-		);
 
+		this.wireCreatingManager.drawWire(this.ctx, currTime, deltaTime);
 		this.drawEntities(currTime, deltaTime);
-
-		if (this.wirePointPending !== undefined) {
-			this.wirePointPending.draw(this.ctx, currTime, deltaTime);
-		}
+		this.wireCreatingManager.drawWirePoint(this.ctx, currTime, deltaTime);
 	}
 
 	update(currTime: number, deltaTime: number) {
 		this.adapter.update();
-
-		for (const wirePoint of this.wirePoints) {
-			wirePoint.isActivated = this.adapter.getPowerState(wirePoint.pinId) === POWER_STATE_HIGH;
-		}
-
-		for (const io of this.ios) {
-			io.namedPin.powerState = this.adapter.getPowerState(io.namedPin.id);
-		}
-
-		for (const chipPin of this.chipPins) {
-			chipPin.namedPin.powerState = this.adapter.getPowerState(chipPin.namedPin.id);
-		}
-
+		this.entityManager.update();
 		this.draw(currTime, deltaTime);
-
-		this.ioTree.cleanup();
-		this.wirePointTree.cleanup();
-		this.wireTree.cleanup();
-		this.chipPinTree.cleanup();
-		this.chipTree.cleanup();
+		this.entityManager.cleanup();
 	}
 }
