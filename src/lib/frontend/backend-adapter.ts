@@ -72,6 +72,7 @@ export class BackendAdapter extends Adapter<number> {
 		}
 
 		this.pins.erase(id);
+		pin.destroy();
 	}
 
 	disconnect(start: number, end: number): void {
@@ -138,6 +139,16 @@ export class BackendAdapter extends Adapter<number> {
 
 		if (chip !== undefined) {
 			chip.process(this.simulator);
+		}
+	}
+
+	destroyChip(inputPinIds: number[], outputPinIds: number[]) {
+		for (const inputPinId of inputPinIds) {
+			this.destroyPin(inputPinId);
+		}
+
+		for (const outputPinId of outputPinIds) {
+			this.destroyPin(outputPinId);
 		}
 	}
 
