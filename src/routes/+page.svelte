@@ -66,7 +66,7 @@
 	</p>
 	<div class="mt-6 flex justify-center space-x-4">
 		<a
-			href="/simulator2"
+			href="/simulator"
 			class="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-400"
 			>Launch Simulator</a
 		>
@@ -112,8 +112,8 @@
 	<!-- <h2 class="glow text-3xl font-bold md:text-4xl">Contact Us</h2> -->
 	<p class="mt-4 text-lg md:text-xl">
 		Reach out to us at <a
-			href="mailto:info@logicgatesim.com"
-			class="text-blue-400 hover:text-blue-600">info@logicgatesim.com</a
+			href="mailto:logicalalphaprogrammer@gmail.com"
+			class="text-blue-400 hover:text-blue-600">logicalalphaprogrammer@gmail.com</a
 		>
 	</p>
 
