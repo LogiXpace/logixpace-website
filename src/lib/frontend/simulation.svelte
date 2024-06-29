@@ -16,7 +16,6 @@
 		scale = 1,
 		scaleFactor = 1,
 		adapter,
-		onVoidContextMenuOpen = () => {},
 		simulationContext = $bindable()
 	}: Props<T> = $props();
 
@@ -43,8 +42,7 @@
 			offset,
 			scale,
 			scaleFactor,
-			adapter,
-			onVoidContextMenuOpen
+			adapter
 		});
 
 		window.addEventListener('resize', handleResize);
