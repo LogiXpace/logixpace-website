@@ -1,4 +1,10 @@
-import { BuiltinAndChip, BuiltinNAndChip, BuiltinNOrChip, BuiltinNotChip, BuiltinOrChip } from '$lib/backend/builtin-chips';
+import {
+	BuiltinAndChip,
+	BuiltinNAndChip,
+	BuiltinNOrChip,
+	BuiltinNotChip,
+	BuiltinOrChip
+} from '$lib/backend/builtin-chips';
 import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
 import type { Chip } from '$lib/backend/chip';
 import { Pin } from '$lib/backend/pin';
@@ -66,6 +72,7 @@ export class BackendAdapter extends Adapter<number> {
 		}
 
 		this.pins.erase(id);
+		pin.destroy();
 	}
 
 	disconnect(start: number, end: number): void {
@@ -131,11 +138,21 @@ export class BackendAdapter extends Adapter<number> {
 		}
 
 		if (chip !== undefined) {
-			chip.process(this.simulator)
+			chip.process(this.simulator);
+		}
+	}
+
+	destroyChip(inputPinIds: number[], outputPinIds: number[]) {
+		for (const inputPinId of inputPinIds) {
+			this.destroyPin(inputPinId);
+		}
+
+		for (const outputPinId of outputPinIds) {
+			this.destroyPin(outputPinId);
 		}
 	}
 
 	update(): void {
-		this.simulator.step();
+		this.simulator.simulate(1000);
 	}
 }

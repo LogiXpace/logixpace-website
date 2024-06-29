@@ -12,23 +12,23 @@ import type { BuiltinChip } from './builtin-chip';
  * @param expectedPowerState - the expected power state to test with
  */
 export function expectBuiltinChipOutputCorrectly<T>(
-  builtinChipConstructor: new (inputPins: Pin[], outputPins: Pin[]) => T,
-  inputPowerStates: PowerState[],
-  expectedPowerState: PowerState
+	builtinChipConstructor: new (inputPins: Pin[], outputPins: Pin[]) => T,
+	inputPowerStates: PowerState[],
+	expectedPowerState: PowerState
 ) {
-  const inputPins = [];
+	const inputPins = [];
 
-  for (let i = 0; i < inputPowerStates.length; i++) {
-    const powerState = inputPowerStates[i];
-    inputPins.push(new Pin(powerState));
-  }
+	for (let i = 0; i < inputPowerStates.length; i++) {
+		const powerState = inputPowerStates[i];
+		inputPins.push(new Pin(powerState));
+	}
 
-  const o = new Pin(POWER_STATE_LOW);
-  new builtinChipConstructor(inputPins, [o]);
+	const o = new Pin(POWER_STATE_LOW);
+	new builtinChipConstructor(inputPins, [o]);
 
-  const simulator = new Simulator();
-  simulator.queuePin(inputPins[0]);
-  simulator.step();
+	const simulator = new Simulator();
+	simulator.queuePin(inputPins[0]);
+	simulator.step();
 
-  expect(o.powerState).toStrictEqual(expectedPowerState);
+	expect(o.powerState).toStrictEqual(expectedPowerState);
 }

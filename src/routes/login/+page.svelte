@@ -24,13 +24,13 @@
 	<div class="flex min-h-screen items-center justify-center bg-transparent">
 		<div class="w-full max-w-md rounded-lg bg-gray-800 p-8 text-white shadow-md">
 			<h2 class="glow mb-6 text-center text-3xl font-bold">Login</h2>
-			<form on:submit="{handleSubmit}">
+			<form on:submit={handleSubmit}>
 				<div class="mb-4">
 					<label class="mb-2 block text-sm font-bold text-gray-400" for="email">Email</label>
 					<input
 						id="email"
 						type="email"
-						bind:value="{form.email}"
+						bind:value={form.email}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>
@@ -40,7 +40,7 @@
 					<input
 						id="password"
 						type="password"
-						bind:value="{form.password}"
+						bind:value={form.password}
 						class="focus:shadow-outline w-full appearance-none rounded border bg-gray-900 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
 						required
 					/>
@@ -75,7 +75,7 @@
 			0 0 70px #00b7ff;
 	} */
 	.back-container {
-		@apply text-white;
+		color: white;
 		background: rgb(7, 7, 20);
 	}
 	.dotted-grid {

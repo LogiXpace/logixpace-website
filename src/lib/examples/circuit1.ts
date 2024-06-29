@@ -1,4 +1,3 @@
-
 import type { ReturnExample } from '.';
 import { BuiltinAndChip, BuiltinOrChip } from '../backend/builtin-chips';
 import { Pin } from '../backend/pin';

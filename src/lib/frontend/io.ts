@@ -232,8 +232,8 @@ export class IO<T> {
 
 		drawCircle(
 			ctx,
-			this.collider.position.x,
-			this.collider.position.y,
+			this.position.x,
+			this.position.y,
 			this.collider.radius,
 			new CanvasStyle({
 				fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR

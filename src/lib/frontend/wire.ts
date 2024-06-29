@@ -40,9 +40,6 @@ export class Wire<T> {
 		this.start = start;
 		this.end = end;
 
-		this.start.addWire(this);
-		this.end.addWire(this);
-
 		this.collider = new LineCollider(this.startPosition, this.endPosition, DEFUALTS.WIRE_WIDTH);
 	}
 
