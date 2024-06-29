@@ -27,7 +27,7 @@ import { SimulationCreatingWireManager } from './simulation-creating-wire-manage
 const QUADTREE_MAX_CAPACITY = 10;
 const QUADTREE_MAX_LEVEL = 15;
 const QUADTREE_MAX_NUMBER_OF_VALUES = 1e2;
-const QUADTREE_SIZE = 50 * QUADTREE_MAX_NUMBER_OF_VALUES;
+const QUADTREE_SIZE = 5e5;
 
 export interface SimulationContextProps<T> {
 	ctx: CanvasRenderingContext2D;
@@ -35,8 +35,6 @@ export interface SimulationContextProps<T> {
 	scale: number;
 	scaleFactor: number;
 	adapter: Adapter<T>;
-
-	onVoidContextMenuOpen: (position: Vector2D) => void;
 }
 
 type HoverAndSelectEntity<T> = WirePoint<T> | IO<T> | Chip<T> | ChipPin<T>;
@@ -61,15 +59,12 @@ export class SimulationContext<T> {
 	private isPanning = false;
 	private isDragging = false;
 
-	private onVoidContextMenuOpen: (position: Vector2D) => void;
-
 	private adapter: Adapter<T>;
 
 	constructor({
 		ctx,
 		offset,
 		scale,
-		onVoidContextMenuOpen,
 		scaleFactor,
 		adapter
 	}: SimulationContextProps<T>) {
@@ -78,7 +73,6 @@ export class SimulationContext<T> {
 		this.scale = scale;
 		this.scaleFactor = scaleFactor;
 		this.adapter = adapter;
-		this.onVoidContextMenuOpen = onVoidContextMenuOpen;
 
 		this.entityManager = new SimulationEntityManager({
 			maxCapacity: QUADTREE_MAX_CAPACITY,
@@ -228,8 +222,11 @@ export class SimulationContext<T> {
 
 	handleContextMenu(e: MouseEvent) {
 		e.preventDefault();
-		e.stopPropagation();
-		e.stopImmediatePropagation();
+
+		if (this.hover !== undefined) {
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+		}
 	}
 
 	handleKeyUp(e: KeyboardEvent) {
@@ -259,7 +256,10 @@ export class SimulationContext<T> {
 		}
 	}
 
-	handleLeftMouseDown(mouseWorldPosition: Vector2D, mouseCollider: PointCollider) {
+	handleLeftMouseDown(
+		mouseWorldPosition: Vector2D,
+		mouseCollider: PointCollider
+	) {
 		if (this.hover === undefined) {
 			if (this.wireCreatingManager.isCreating()) {
 				const wire = this.entityManager.queryWireByPoint(mouseCollider);
@@ -280,8 +280,7 @@ export class SimulationContext<T> {
 				this.isPanning = true;
 				this.deselect();
 			}
-
-			return;
+			return
 		}
 
 		if (
@@ -293,8 +292,7 @@ export class SimulationContext<T> {
 			} else {
 				this.wireCreatingManager.endOn(this.hover.outletPosition, this.hover);
 			}
-
-			return;
+			return
 		}
 
 		if (this.hover instanceof WirePoint && !this.keyboardInput.isKeyPressed('Control')) {
@@ -303,7 +301,6 @@ export class SimulationContext<T> {
 			} else {
 				this.wireCreatingManager.endOn(this.hover.position, this.hover);
 			}
-
 			return;
 		}
 
@@ -337,10 +334,14 @@ export class SimulationContext<T> {
 				}
 
 				this.hover = undefined;
+
+				mouseEvent.stopPropagation();
+				mouseEvent.stopImmediatePropagation();
 			} else if (this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.delete();
-			} else {
-				this.onVoidContextMenuOpen(this.mouseInput.downPosition.clone());
+
+				mouseEvent.stopPropagation();
+				mouseEvent.stopImmediatePropagation();
 			}
 		}
 	}
