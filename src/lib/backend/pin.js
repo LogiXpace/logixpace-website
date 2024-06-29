@@ -11,15 +11,15 @@ export class Pin {
 
 		/**
 		 * holds all the pins that this pin has connection to.
-		 * @type {Array<Pin>}
+		 * @type {Set<Pin>}
 		 */
-		this.connectedPins = new Array();
+		this.connectedPins = new Set();
 
 		/**
 		 * holds all the chips that this pin has connection to.
-		 * @type {Array<import("./chip").Chip>}
+		 * @type {Set<import("./chip").Chip>}
 		 */
-		this.connectedChips = new Array();
+		this.connectedChips = new Set();
 
 		/**
 		 * records number of connections that other pins linked to this
@@ -37,13 +37,16 @@ export class Pin {
 	 * @param {Pin} pin - the pin to connect to
 	 */
 	connectPin(pin) {
-		this.connectedPins.push(pin);
+		pin.connectedPins.add(this);
+		this.connectedPins.add(pin);
 
 		// increment the number of connectors on the pin.
 		pin.maximumInfluencers++;
+		this.maximumInfluencers++;
 
 		// change influx based on this power state.
 		pin.changeInflux(this.powerState);
+		this.changeInflux(pin.powerState);
 	}
 
 	/**
@@ -51,16 +54,24 @@ export class Pin {
 	 * @param {Pin} pin - the pin to connect to
 	 */
 	disconnectPin(pin) {
-		const index = this.connectedPins.indexOf(pin);
-		if (index === -1) {
-			return;
-		}
-
-		this.connectedPins.splice(index, 1);
+		this.connectedPins.delete(pin);
+		pin.connectedPins.delete(this);
 
 		// decrement the number of connectors on the pin.
 		pin.maximumInfluencers--;
 		pin.influx--;
+
+		this.maximumInfluencers--;
+		this.influx--;
+	}
+
+	destroy() {
+		for (const connectedPin of this.connectedPins) {
+			connectedPin.disconnectPin(this);
+		}
+
+		this.connectedPins.clear();
+		this.connectedChips.clear();
 	}
 
 	/**
@@ -68,7 +79,7 @@ export class Pin {
 	 * @param {import("./chip").Chip} chip - the chip to connect to
 	 */
 	connectChip(chip) {
-		this.connectedChips.push(chip);
+		this.connectedChips.add(chip);
 	}
 
 	/**
@@ -131,16 +142,14 @@ export class Pin {
 	 * @important this method is ONLY called in the simulator step method.
 	 * @param {import("./simulator").Simulator} simulator
 	 */
-	propogate(simulator) {
+	propogate(simulator) {		
 		// loop over the connected pins to update them with this internal power state.
-		for (let i = 0; i < this.connectedPins.length; i++) {
-			const connectedPin = this.connectedPins[i];
+		for (const connectedPin of this.connectedPins) {
 			connectedPin.update(this.powerState, simulator);
 		}
 
 		// loop over the connected pins to process.
-		for (let i = 0; i < this.connectedChips.length; i++) {
-			const connectedChip = this.connectedChips[i];
+		for (const connectedChip of this.connectedChips) {
 			// if (!simulator.isChipProcessable(connectedChip)) continue;
 			connectedChip.process(simulator);
 		}
