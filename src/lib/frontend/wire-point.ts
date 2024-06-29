@@ -50,7 +50,7 @@ export class WirePoint<T> {
 		}
 	}
 
-	initEvents() {}
+	initEvents() { }
 
 	isCollidingMain(collider: Collider) {
 		return this.collider.isColliding(collider);
@@ -88,7 +88,7 @@ export class WirePoint<T> {
 		return false;
 	}
 
-	deselect() {}
+	deselect() { }
 
 	draw(ctx: CanvasRenderingContext2D, currTime: number, deltaTime: number) {
 		drawCircle(

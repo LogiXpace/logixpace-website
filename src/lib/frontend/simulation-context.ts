@@ -251,6 +251,14 @@ export class SimulationContext<T> {
 					DEFUALTS.WIRE_WIDTH
 				);
 
+				// make a new wire point on the closest point
+				const closestWirePoint = this.addWirePoint({
+					position: closestPoint // make sure it refrences the closest position
+				});
+
+				// add it to the scene to be able to be drawn
+				this.entityManager.wirePointQueries.add(closestWirePoint);
+
 				this.wireCreatingManager.createAndSplitOn(closestPoint, wire);
 			}
 		}
