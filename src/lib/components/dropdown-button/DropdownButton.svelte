@@ -1,5 +1,5 @@
 <script>
-	let isOpen = false;
+	let isOpen = $state(false);
 
 	function toggleDropdown() {
 		isOpen = !isOpen;
@@ -8,7 +8,7 @@
 
 <div class="relative">
 	<button
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 		class="rounded bg-blue-600 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-500"
 	>
 		<div class="flex items-center gap-1 space-x-2">

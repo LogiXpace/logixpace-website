@@ -13,8 +13,10 @@
 </script>
 
 <!-- Sidebar -->
-<aside class="back-container sidebar stroke flex w-64 flex-col">
-	<div class="topbar stroke bg-transparent p-4 text-center">
+<aside
+	class="back-container border-r-1 flex w-64 flex-col border border-y-0 border-l-0 border-gray-700"
+>
+	<div class="topbar border-gray-700 bg-transparent p-4 text-center">
 		<h2 class="text-2xl font-bold text-blue-500">LogiXpace</h2>
 		<p class="mt-2 text-gray-400">Welcome, {user.name}</p>
 	</div>
@@ -31,22 +33,3 @@
 		</ul>
 	</nav>
 </aside>
-
-<style>
-	.back-container {
-		@apply text-white;
-		background-color: rgb(7, 7, 20);
-	}
-
-	.sidebar {
-		border-right-width: 1px;
-	}
-
-	.topbar {
-		border-bottom-width: 1px;
-	}
-
-	.stroke {
-		@apply border-gray-700;
-	}
-</style>
