@@ -75,7 +75,7 @@
 			0 0 70px #00b7ff;
 	} */
 	.back-container {
-		@apply text-white;
+		color: white;
 		background: rgb(7, 7, 20);
 	}
 	.dotted-grid {

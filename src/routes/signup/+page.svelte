@@ -87,7 +87,7 @@
 
 <style>
 	.back-container {
-		@apply text-white;
+		color: white;
 		background: rgb(7, 7, 20);
 	}
 	.dotted-grid {

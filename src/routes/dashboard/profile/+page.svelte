@@ -4,13 +4,14 @@
 </script>
 
 <div class="back-container flex min-h-screen text-white">
+	<!-- Sidebar -->
 	<Sidebar />
 
 	<!-- Main Content -->
 	<div class="flex flex-grow flex-col">
 		<!-- Header -->
 		<header class="topbar stroke flex items-center justify-between bg-transparent p-4 shadow-md">
-			<h1 class="text-2xl font-bold">Dashboard</h1>
+			<h1 class="text-2xl font-bold">Profile</h1>
 			<div class="flex items-center space-x-4">
 				<div class="relative">
 					<input
@@ -26,30 +27,7 @@
 		</header>
 
 		<!-- Main Dashboard Content -->
-		<main class="back-container flex-grow p-6">
-			<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-				<!-- Example Widget 1 -->
-				<div class="rounded-lg bg-gray-800 p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-bold">Widget 1</h2>
-					<p class="text-gray-400">Content for widget 1 goes here...</p>
-				</div>
-				<!-- Example Widget 2 -->
-				<div class="rounded-lg bg-gray-800 p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-bold">Widget 2</h2>
-					<p class="text-gray-400">Content for widget 2 goes here...</p>
-				</div>
-				<!-- Example Widget 3 -->
-				<div class="rounded-lg bg-gray-800 p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-bold">Widget 3</h2>
-					<p class="text-gray-400">Content for widget 3 goes here...</p>
-				</div>
-				<!-- Example Widget 3 -->
-				<div class="rounded-lg bg-gray-800 p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-bold">Widget 3</h2>
-					<p class="text-gray-400">Content for widget 3 goes here...</p>
-				</div>
-			</div>
-		</main>
+		<main class="back-container flex-grow p-6"></main>
 	</div>
 </div>
 
@@ -64,6 +42,7 @@
 		@apply text-white;
 		background-color: rgb(7, 7, 20);
 	}
+
 	.topbar {
 		border-bottom-width: 1px;
 	}
