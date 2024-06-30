@@ -15,6 +15,8 @@
 	import type { SimulationContext } from '$lib/frontend/simulation-context';
 	import { RGB } from '$lib/helpers/color';
 	import { DIRECTION } from '$lib/helpers/direction';
+	import { POWER_STATE_LOW } from '$lib/frontend/state';
+	import { POWER_STATE_HIGH } from '$lib/backend/power-state';
 
 	type $$Props = AddEntitiesContextMenuProps<T>;
 
@@ -121,15 +123,14 @@
 					<Command.Item
 						onSelect={() => {
 							open = false;
-							simulationContext.addIO({
-								direction: DIRECTION.RIGHT,
-								namedPin: simulationContext.addNamedPin({
-									name: 'input',
-									powerState: 0
-								}),
-								position,
-								color: new RGB(0, 0, 0)
-							});
+							simulationContext.addInput(
+								{
+									position,
+									color: new RGB(0, 0, 0)
+								},
+								'input',
+								POWER_STATE_LOW
+							);
 						}}
 					>
 						Input
@@ -137,15 +138,14 @@
 					<Command.Item
 						onSelect={() => {
 							open = false;
-							simulationContext.addIO({
-								direction: DIRECTION.LEFT,
-								namedPin: simulationContext.addNamedPin({
-									name: 'output',
-									powerState: 0
-								}),
-								position,
-								color: new RGB(0, 0, 0)
-							});
+							simulationContext.addOutput(
+								{
+									position,
+									color: new RGB(0, 0, 0)
+								},
+								'output',
+								POWER_STATE_LOW
+							);
 						}}
 					>
 						Output
