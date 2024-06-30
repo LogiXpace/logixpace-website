@@ -17,12 +17,17 @@ import { Wire, type WireProps } from './wire';
 import { SimulationEventListener } from './simulation-event';
 import { getClosestPoint } from '$lib/helpers/shape';
 import type { Adapter } from './adapter';
-import { POWER_STATE_HIGH, POWER_STATE_LOW } from './state';
+import { POWER_STATE_HIGH, POWER_STATE_LOW, type PowerState } from './state';
 import { Chip, type ChipProps } from './chip';
 import { ChipPin, type ChipPinProps } from './chip-pin';
 import type { ChipType } from './chip-types';
 import { SimulationEntityManager } from './simulation-entity-manager';
 import { SimulationCreatingWireManager } from './simulation-creating-wire-manager';
+import { Output, type OutputProps } from './output';
+import { Input, type InputProps } from './input';
+import { SimulationSelectionManager } from './simulation-selection-manager';
+import { SimulationExportJSON } from './simulation-export-json';
+import { importJSON } from './simulation-import-json';
 
 const QUADTREE_MAX_CAPACITY = 10;
 const QUADTREE_MAX_LEVEL = 15;
@@ -37,29 +42,29 @@ export interface SimulationContextProps<T> {
 	adapter: Adapter<T>;
 }
 
-type HoverAndSelectEntity<T> = WirePoint<T> | IO<T> | Chip<T> | ChipPin<T>;
+type HoverAndSelectEntity<T> = WirePoint<T> | Input<T> | Output<T> | Chip<T> | ChipPin<T>;
 
 export class SimulationContext<T> {
-	private ctx: CanvasRenderingContext2D;
+	ctx: CanvasRenderingContext2D;
 
-	private entityManager: SimulationEntityManager<T>;
-	private wireCreatingManager: SimulationCreatingWireManager<T>;
+	entityManager: SimulationEntityManager<T>;
+	wireCreatingManager: SimulationCreatingWireManager<T>;
+	selectionManager: SimulationSelectionManager<T>;
 
-	private selected = new Set<HoverAndSelectEntity<T>>();
+	offset: Vector2D;
+	scale: number;
+	scaleFactor: number;
 
-	private offset: Vector2D;
-	private scale: number;
-	private scaleFactor: number;
+	mouseInput = new MouseInput();
+	keyboardInput = new KeyboardInput();
 
-	private mouseInput = new MouseInput();
-	private keyboardInput = new KeyboardInput();
+	hover: HoverAndSelectEntity<T> | undefined = undefined;
 
-	private hover: HoverAndSelectEntity<T> | undefined = undefined;
+	isPanning = false;
+	isDragging = false;
+	isSelecting = false;
 
-	private isPanning = false;
-	private isDragging = false;
-
-	private adapter: Adapter<T>;
+	adapter: Adapter<T>;
 
 	constructor({
 		ctx,
@@ -82,23 +87,14 @@ export class SimulationContext<T> {
 		});
 
 		this.wireCreatingManager = new SimulationCreatingWireManager(this.entityManager);
+		this.selectionManager = new SimulationSelectionManager(this.entityManager);
 
 		this.initEvents();
 	}
 
 	queryAll() {
 		const screenCollider = this.getScreenCollider();
-
-		const start = performance.now();
 		this.entityManager.query(screenCollider);
-		const end = performance.now();
-
-		// console.group();
-		// console.log('querying time', end - start);
-		// console.log('ios.size', this.ios.size);
-		// console.log('wirePoints.size', this.wirePoints.size);
-		// console.log('wires.size', this.wires.size);
-		// console.groupEnd();
 	}
 
 	getScreenCollider() {
@@ -120,13 +116,18 @@ export class SimulationContext<T> {
 		window.addEventListener('keyup', this.handleKeyUp.bind(this));
 	}
 
-	addIO(param: IOProps<T>) {
-		const io = new IO(param);
-		this.entityManager.insertIO(io);
-
+	addInput(param: Omit<InputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
+		const input = new Input({ ...param, namedPin: new NamedPin({ id: this.adapter.createInputPin(powerState), name, powerState }) });
+		this.entityManager.insertInput(input);
 		this.queryAll();
+		return input;
+	}
 
-		return io;
+	addOutput(param: Omit<OutputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
+		const output = new Output({ ...param, namedPin: new NamedPin({ id: this.adapter.createOutputPin(powerState), name, powerState }) });
+		this.entityManager.insertOutput(output);
+		this.queryAll();
+		return output;
 	}
 
 	addWirePoint(param: Omit<WirePointProps<T>, 'pinId'>) {
@@ -151,8 +152,6 @@ export class SimulationContext<T> {
 		const chipPin = new ChipPin({ ...param, position: new Vector2D(), direction: DIRECTION.LEFT });
 		this.entityManager.insertChipPin(chipPin);
 
-		this.queryAll();
-
 		return chipPin;
 	}
 
@@ -160,7 +159,7 @@ export class SimulationContext<T> {
 		chipType: ChipType,
 		inputNames: string[],
 		outputNames: string[],
-		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins'>
+		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins' | 'simulationContext' | 'id'>
 	) {
 		const inputPins: ChipPin<T>[] = new Array(inputNames.length);
 
@@ -187,13 +186,18 @@ export class SimulationContext<T> {
 		const measure = this.ctx.measureText(param.name);
 		const textWidth = measure.width;
 
-		const chip = new Chip({ ...param, inputPins, outputPins, textWidth });
-		this.entityManager.insertChip(chip);
-		this.adapter.createChip(
+		const id = this.adapter.createChip(
 			chipType,
 			inputPins.map((pin) => pin.namedPin.id),
 			outputPins.map((pin) => pin.namedPin.id)
 		);
+
+		if (id === undefined) {
+			return undefined;
+		}
+
+		const chip = new Chip({ ...param, inputPins, outputPins, textWidth, simulationContext: this, id });
+		this.entityManager.insertChip(chip);
 
 		this.queryAll();
 
@@ -218,6 +222,56 @@ export class SimulationContext<T> {
 
 	handleKeyDown(e: KeyboardEvent) {
 		this.keyboardInput.handleKeyPressed(e.key);
+
+		if (this.selectionManager.isSelecteed()) {
+			if (this.keyboardInput.isKeyPressed("Delete")) {
+				for (const input of this.selectionManager.inputs) {
+					this.entityManager.destroyInput(input);
+				}
+
+				for (const output of this.selectionManager.outputs) {
+					this.entityManager.destroyOutput(output);
+				}
+
+				for (const chip of this.selectionManager.chips) {
+					this.entityManager.destroyChip(chip);
+				}
+
+				for (const wirePoint of this.selectionManager.wirePoints) {
+					this.entityManager.destroyWirePoint(wirePoint);
+				}
+
+				this.selectionManager.clear();
+			} else if (this.keyboardInput.isKeyCombinationPressedOnly(["Control", 'c'])) {
+				const save = new SimulationExportJSON<T>();
+
+				for (const input of this.selectionManager.inputs) {
+					save.serializeInput(input);
+				}
+
+				for (const output of this.selectionManager.outputs) {
+					save.serializeOutput(output);
+				}
+
+				for (const wirePoint of this.selectionManager.wirePoints) {
+					save.serializeWirePoint(wirePoint);
+				}
+
+				for (const chip of this.selectionManager.chips) {
+					save.serializeChip(chip);
+				}
+
+				const json = save.allSerialized(this.screenVectorToWorldVector(this.mouseInput.movePosition));
+				navigator.clipboard.writeText(JSON.stringify(json));
+				console.log(json);
+			}
+		}
+
+		if (this.keyboardInput.isKeyCombinationPressedOnly(["Control", "v"])) {
+			navigator.clipboard.readText().then(text => {
+				importJSON(text, this);
+			});
+		}
 	}
 
 	handleContextMenu(e: MouseEvent) {
@@ -225,7 +279,6 @@ export class SimulationContext<T> {
 
 		if (this.hover !== undefined) {
 			e.stopPropagation();
-			e.stopImmediatePropagation();
 		}
 	}
 
@@ -284,16 +337,24 @@ export class SimulationContext<T> {
 				} else {
 					this.wireCreatingManager.create();
 				}
-			} else {
+			} else if (this.keyboardInput.isKeyPressed(' ')) {
 				this.isPanning = true;
-				this.deselect();
+			} else if (this.keyboardInput.isKeyPressed('Control')) {
+				this.isSelecting = true;
+			} else {
+				this.isSelecting = true;
+				this.selectionManager.deselectAll();
 			}
-			return
+
+			return;
 		}
 
 		if (
-			(this.hover instanceof IO && this.hover.isOutletHovering) ||
-			(this.hover instanceof ChipPin && this.hover.isOutletHovering)
+			(
+				this.hover instanceof Input ||
+				this.hover instanceof Output ||
+				this.hover instanceof ChipPin
+			) && this.hover.isOutletHovering
 		) {
 			if (!this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.createOn(this.hover.outletPosition, this.hover);
@@ -303,7 +364,7 @@ export class SimulationContext<T> {
 			return
 		}
 
-		if (this.hover instanceof WirePoint && !this.keyboardInput.isKeyPressed('Control')) {
+		if (this.hover instanceof WirePoint && this.hover.isHovering && !this.keyboardInput.isKeyPressed('Control')) {
 			if (!this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.createOn(this.hover.position, this.hover);
 			} else {
@@ -312,16 +373,33 @@ export class SimulationContext<T> {
 			return;
 		}
 
-		if (this.hover instanceof IO && this.keyboardInput.isKeyPressed('Shift')) {
+		if (this.hover instanceof Input && this.keyboardInput.isKeyPressed('Control')) {
 			this.adapter.setPowerState(
 				this.hover.namedPin.id,
 				this.hover.namedPin.powerState === POWER_STATE_HIGH ? POWER_STATE_LOW : POWER_STATE_HIGH
 			);
+			this.hover.toggle();
+
 			return;
 		}
 
-		this.select(this.hover);
-		this.isDragging = true;
+		if (this.hover.isSelected && this.keyboardInput.isKeyPressed('Shift')) {
+			this.select(this.hover);
+			return;
+		}
+
+		if (this.hover.isSelected) {
+			this.isDragging = true;
+			return;
+		}
+
+		if (!this.keyboardInput.isKeyPressed('Shift')) {
+			this.selectionManager.deselectAll();
+		}
+
+		if (this.select(this.hover)) {
+			this.isDragging = true;
+		}
 	}
 
 	handleMouseDown(mouseEvent: MouseEvent) {
@@ -335,21 +413,17 @@ export class SimulationContext<T> {
 			if (this.hover !== undefined) {
 				if (this.hover instanceof Chip) {
 					this.entityManager.destroyChip(this.hover);
-				} else if (this.hover instanceof IO) {
-					this.entityManager.destroyIO(this.hover);
+				} else if (this.hover instanceof Input) {
+					this.entityManager.destroyInput(this.hover);
+				} else if (this.hover instanceof Output) {
+					this.entityManager.destroyOutput(this.hover);
 				} else if (this.hover instanceof WirePoint) {
 					this.entityManager.destroyWirePoint(this.hover);
 				}
 
 				this.hover = undefined;
-
-				mouseEvent.stopPropagation();
-				mouseEvent.stopImmediatePropagation();
 			} else if (this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.delete();
-
-				mouseEvent.stopPropagation();
-				mouseEvent.stopImmediatePropagation();
 			}
 		}
 	}
@@ -359,6 +433,8 @@ export class SimulationContext<T> {
 
 		this.isPanning = false;
 		this.isDragging = false;
+		this.isSelecting = false;
+		this.selectionManager.resetSelectionBox();
 	}
 
 	moveWirePoint(wirePoint: WirePoint<T>, delta: Vector2D) {
@@ -374,13 +450,26 @@ export class SimulationContext<T> {
 		}
 	}
 
-	moveIO(io: IO<T>, delta: Vector2D) {
-		this.entityManager.removeIO(io);
-		io.move(delta);
-		this.entityManager.insertIO(io);
+	moveInput(input: Input<T>, delta: Vector2D) {
+		this.entityManager.removeInput(input);
+		input.move(delta);
+		this.entityManager.insertInput(input);
 
-		for (let i = 0; i < io.wires.length; i++) {
-			const wire = io.wires[i];
+		for (let i = 0; i < input.wires.length; i++) {
+			const wire = input.wires[i];
+			this.entityManager.removeWire(wire);
+			wire.updateCollider();
+			this.entityManager.insertWire(wire);
+		}
+	}
+
+	moveOutput(output: Output<T>, delta: Vector2D) {
+		this.entityManager.removeOutput(output);
+		output.move(delta);
+		this.entityManager.insertOutput(output);
+
+		for (let i = 0; i < output.wires.length; i++) {
+			const wire = output.wires[i];
 			this.entityManager.removeWire(wire);
 			wire.updateCollider();
 			this.entityManager.insertWire(wire);
@@ -420,15 +509,28 @@ export class SimulationContext<T> {
 		if (this.isPanning) {
 			this.offset.addVector(delta);
 			this.queryAll();
+		} else if (this.isSelecting) {
+			const mouseDownWorldPosition = this.screenVectorToWorldVector(this.mouseInput.downPosition);
+			if (!this.keyboardInput.isKeyPressed('Control')) {
+				this.selectionManager.deselectAll();
+			}
+
+			this.selectionManager.selectFromPoint(mouseDownWorldPosition, mouseWorldPosition);
 		} else if (this.isDragging) {
-			for (const entity of this.selected) {
-				if (entity instanceof IO) {
-					this.moveIO(entity, delta);
-				} else if (entity instanceof WirePoint) {
-					this.moveWirePoint(entity, delta);
-				} else if (entity instanceof Chip) {
-					this.moveChip(entity, delta);
-				}
+			for (const input of this.selectionManager.inputs) {
+				this.moveInput(input, delta);
+			}
+
+			for (const output of this.selectionManager.outputs) {
+				this.moveOutput(output, delta);
+			}
+
+			for (const chip of this.selectionManager.chips) {
+				this.moveChip(chip, delta);
+			}
+
+			for (const wirePoint of this.selectionManager.wirePoints) {
+				this.moveWirePoint(wirePoint, delta);
 			}
 		} else {
 			this.hover = this.getHover();
@@ -458,7 +560,12 @@ export class SimulationContext<T> {
 			}
 		}
 
-		let queried: HoverAndSelectEntity<T> | undefined = this.entityManager.queryIOByPoint(mouseCollider);
+		let queried: HoverAndSelectEntity<T> | undefined = this.entityManager.queryInputByPoint(mouseCollider);
+		if (queried !== undefined && queried.checkHover(mouseCollider)) {
+			return queried;
+		}
+
+		queried = this.entityManager.queryOutputByPoint(mouseCollider)
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
@@ -482,25 +589,15 @@ export class SimulationContext<T> {
 	}
 
 	select(element: HoverAndSelectEntity<T>) {
-		const mouseWorldPosition = this.screenVectorToWorldVector(this.mouseInput.movePosition);
-		const mouseCollider = new PointCollider(mouseWorldPosition);
-
-		if (this.selected.has(element)) {
-			this.selected.delete(element);
-			element.deselect();
-			return;
+		if (element instanceof Chip) {
+			return this.selectionManager.selectChip(element);
+		} else if (element instanceof Input) {
+			return this.selectionManager.selectInput(element);
+		} else if (element instanceof Output) {
+			return this.selectionManager.selectOutput(element);
+		} else if (element instanceof WirePoint) {
+			return this.selectionManager.selectWirePoint(element);
 		}
-
-		this.selected.add(element);
-		// element.select(mouseCollider);
-	}
-
-	deselect() {
-		for (const element of this.selected) {
-			element.deselect();
-		}
-
-		this.selected.clear();
 	}
 
 	worldScalarToScreenScalar(worldScalar: number) {
@@ -542,34 +639,40 @@ export class SimulationContext<T> {
 	}
 
 	drawEntities(currTime: number, deltaTime: number) {
-		const wires = this.entityManager.wireQueries.difference(this.selected);
-		for (const wire of wires) {
+
+		const differenceInputs = this.entityManager.inputQueries.difference(this.selectionManager.inputs);
+		const differenceOutputs = this.entityManager.outputQueries.difference(this.selectionManager.outputs);
+		const differenceWirePoints = this.entityManager.wirePointQueries.difference(this.selectionManager.wirePoints);
+		const differenceChips = this.entityManager.chipQueries.difference(this.selectionManager.chips);
+
+		for (const wire of this.entityManager.wireQueries) {
 			wire.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const wirePoints = this.entityManager.wirePointQueries.difference(this.selected);
-		for (const wirePoint of wirePoints) {
+		this.wireCreatingManager.drawWire(this.ctx, currTime, deltaTime);
+
+		for (const wirePoint of differenceWirePoints) {
 			wirePoint.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const ios = this.entityManager.ioQueries.difference(this.selected);
-		for (const io of ios) {
-			io.draw(this.ctx, currTime, deltaTime);
+		for (const input of differenceInputs) {
+			input.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const chipPins = this.entityManager.chipPinQueries.difference(this.selected);
-		for (const chipPin of chipPins) {
+		for (const output of differenceOutputs) {
+			output.draw(this.ctx, currTime, deltaTime);
+		}
+
+		for (const chipPin of this.entityManager.chipPinQueries) {
 			chipPin.draw(this.ctx, currTime, deltaTime);
 		}
 
-		const chips = this.entityManager.chipQueries.difference(this.selected);
-		for (const chip of chips) {
+		for (const chip of differenceChips) {
 			chip.draw(this.ctx, currTime, deltaTime);
 		}
 
-		for (const entity of this.selected) {
-			entity.draw(this.ctx, currTime, deltaTime);
-		}
+		this.selectionManager.draw(this.ctx, currTime, deltaTime);
+		this.wireCreatingManager.drawWirePoint(this.ctx, currTime, deltaTime);
 	}
 
 	applyZoomAndPan() {
@@ -584,10 +687,7 @@ export class SimulationContext<T> {
 		this.drawGrid();
 
 		this.applyZoomAndPan();
-
-		this.wireCreatingManager.drawWire(this.ctx, currTime, deltaTime);
 		this.drawEntities(currTime, deltaTime);
-		this.wireCreatingManager.drawWirePoint(this.ctx, currTime, deltaTime);
 	}
 
 	update(currTime: number, deltaTime: number) {
