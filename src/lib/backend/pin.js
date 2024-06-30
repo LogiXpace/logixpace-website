@@ -34,9 +34,11 @@ export class Pin {
 
 	/**
 	 * connect pin
+	 * 
+	 * @param {import('./simulator').Simulator} simulator 
 	 * @param {Pin} pin - the pin to connect to
 	 */
-	connectPin(pin) {
+	connectPin(simulator, pin) {
 		pin.connectedPins.add(this);
 		this.connectedPins.add(pin);
 
@@ -46,28 +48,51 @@ export class Pin {
 
 		// change influx based on this power state.
 		pin.changeInflux(this.powerState);
+		pin.update(this.powerState, simulator);
+
 		this.changeInflux(pin.powerState);
+		this.update(pin.powerState, simulator);
 	}
 
 	/**
-	 * connect pin
+	 * disconnect pin
+	 * 
+	 * @param {import('./simulator').Simulator} simulator 
 	 * @param {Pin} pin - the pin to connect to
 	 */
-	disconnectPin(pin) {
+	disconnectPin(simulator, pin) {
 		this.connectedPins.delete(pin);
 		pin.connectedPins.delete(this);
 
 		// decrement the number of connectors on the pin.
 		pin.maximumInfluencers--;
-		pin.influx--;
+
+		if (this.powerState === POWER_STATE_HIGH) {
+			pin.influx--;
+		}
 
 		this.maximumInfluencers--;
-		this.influx--;
+
+		if (pin.powerState === POWER_STATE_HIGH) {
+			this.influx--;
+		}
+
+		if (pin.isUpdatable(POWER_STATE_LOW)) {
+			simulator.queuePin(pin);
+		}
+
+		if (this.isUpdatable(POWER_STATE_LOW)) {
+			simulator.queuePin(this);
+		}
 	}
 
-	destroy() {
+	/**
+	 * 
+	 * @param {import('./simulator').Simulator} simulator 
+	 */
+	destroy(simulator) {
 		for (const connectedPin of this.connectedPins) {
-			connectedPin.disconnectPin(this);
+			connectedPin.disconnectPin(simulator, this);
 		}
 
 		this.connectedPins.clear();
@@ -94,7 +119,7 @@ export class Pin {
 		 * case 2: power state low && internal power state high
 		 *
 		 * But case 2 is a bit special, it needs to know whether all the sorrunding pins that influnece this pin is off. this is basically what influx is.
-		 * Influx will only be 0 when every other sorrounding pin is off and maximumInfluencers when all are on.
+		 * Influx will only be 0 when every other sorrounding pin is off and equal to maximumInfluencers when all are on.
 		 *
 		 * modifying the cases:
 		 * case 1 (will stay the same): power state high && internal power state low
@@ -109,6 +134,8 @@ export class Pin {
 
 	/**
 	 * change influx based on the power state from other pins: power state high, increment; power state low, decrement.
+	 * 
+	 * @important this method can ONLY be called on the pins or chips that has connections to this pin.
 	 * @param {import("./power-state").PowerState} powerState - the power state to use to determine whether the influx will decrement or increment.
 	 */
 	changeInflux(powerState) {
@@ -118,14 +145,10 @@ export class Pin {
 	/**
 	 * set the internal power state when it is updatable and queue it on the simulator to propagte it later.
 	 *
-	 * @important this method can ONLY be called on the pins or chips that has connections to this pin.
 	 * @param {import("./power-state").PowerState} powerState - the power state to update to
 	 * @param {import("./simulator").Simulator} simulator - the simulator to run this update method
 	 */
 	update(powerState, simulator) {
-		// change influx
-		this.changeInflux(powerState);
-
 		// check if it is updatable
 		if (!this.isUpdatable(powerState)) return;
 
@@ -145,6 +168,10 @@ export class Pin {
 	propogate(simulator) {		
 		// loop over the connected pins to update them with this internal power state.
 		for (const connectedPin of this.connectedPins) {
+			// change influx
+			connectedPin.changeInflux(this.powerState);
+
+			// update the power state
 			connectedPin.update(this.powerState, simulator);
 		}
 
