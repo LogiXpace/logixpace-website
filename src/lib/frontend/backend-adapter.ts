@@ -7,6 +7,8 @@ import {
 } from '$lib/backend/builtin-chips';
 import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
 import type { Chip } from '$lib/backend/chip';
+import { InputPin } from '$lib/backend/input-pin';
+import { OutputPin } from '$lib/backend/output-pin';
 import { Pin } from '$lib/backend/pin';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/backend/power-state';
 import { Simulator } from '$lib/backend/simulator';
@@ -21,6 +23,7 @@ import {
 export class BackendAdapter extends Adapter<number> {
 	private simulator = new Simulator();
 	private pins = new FreeList<Pin>();
+	private chips = new FreeList<Chip>();
 
 	constructor() {
 		super('BackendAdapter');
@@ -28,6 +31,16 @@ export class BackendAdapter extends Adapter<number> {
 
 	createPin(state: FrontendPowerState): number {
 		const pin = new Pin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+		return this.pins.insert(pin);
+	}
+
+	createInputPin(state: FrontendPowerState): number {
+		const pin = new InputPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+		return this.pins.insert(pin);
+	}
+
+	createOutputPin(state: FrontendPowerState): number {
+		const pin = new OutputPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
 		return this.pins.insert(pin);
 	}
 
@@ -61,8 +74,7 @@ export class BackendAdapter extends Adapter<number> {
 			throw new Error('Invalid end pin ID');
 		}
 
-		startPin.connectPin(endPin);
-		this.simulator.queuePin(startPin);
+		startPin.connectPin(this.simulator, endPin);
 	}
 
 	destroyPin(id: number): void {
@@ -72,7 +84,7 @@ export class BackendAdapter extends Adapter<number> {
 		}
 
 		this.pins.erase(id);
-		pin.destroy();
+		pin.destroy(this.simulator);
 	}
 
 	disconnect(start: number, end: number): void {
@@ -87,10 +99,10 @@ export class BackendAdapter extends Adapter<number> {
 			throw new Error('Invalid end pin ID');
 		}
 
-		startPin.disconnectPin(endPin);
+		startPin.disconnectPin(this.simulator, endPin);
 	}
 
-	createChip(type: ChipType, inputIds: number[], outputIds: number[]): void {
+	createChip(type: ChipType, inputIds: number[], outputIds: number[]): number | undefined {
 		const inputPins = new Array(inputIds.length);
 		for (let i = 0; i < inputIds.length; i++) {
 			const pin = this.pins.get(inputIds[i]);
@@ -134,15 +146,21 @@ export class BackendAdapter extends Adapter<number> {
 				break;
 
 			default:
-				break;
+				return undefined;
 		}
 
-		if (chip !== undefined) {
-			chip.process(this.simulator);
-		}
+		chip.process(this.simulator);
+		return this.chips.insert(chip);
 	}
 
-	destroyChip(inputPinIds: number[], outputPinIds: number[]) {
+	destroyChip(id: number, inputPinIds: number[], outputPinIds: number[]) {
+		const chip = this.chips.get(id);
+		if (typeof chip === 'number' || chip === undefined) {
+			throw new Error('Invalid chip ID');
+		}
+
+		this.chips.erase(id);
+
 		for (const inputPinId of inputPinIds) {
 			this.destroyPin(inputPinId);
 		}

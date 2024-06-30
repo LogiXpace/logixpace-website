@@ -17,6 +17,16 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
+	createInputPin(state: PowerState): T {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
+	createOutputPin(state: PowerState): T {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
 	getPowerState(id: T): PowerState {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
@@ -27,7 +37,7 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
-	createChip(type: ChipType, inputIds: T[], outputIds: T[]): void {
+	createChip(type: ChipType, inputIds: T[], outputIds: T[]): T | undefined {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
@@ -37,7 +47,7 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
-	destroyChip(inputPinIds: T[], outputPinIds: T[]): void {
+	destroyChip(id: T, inputPinIds: T[], outputPinIds: T[]): void {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
