@@ -37,7 +37,7 @@ export class ChipPin<T> implements WireEntity<T> {
 	isOutletLineHovering = false;
 	isSelected = false;
 
-	wires = new Set<Wire<T>>();
+	wires: Wire<T>[] = [];
 
 	constructor(props: ChipPinProps<T>) {
 		this.namedPin = props.namedPin;
@@ -146,14 +146,16 @@ export class ChipPin<T> implements WireEntity<T> {
 		this.isOutletLineHovering = false;
 	}
 
-	addWire(wire: Wire<T>): void {
-		this.wires.add(wire);
+	addWire(wire: Wire<T>) {
+		this.wires.push(wire);
 	}
 
-	removeWire(wire: Wire<T>): void {
-		this.wires.delete(wire);
+	removeWire(wire: Wire<T>) {
+		const index = this.wires.indexOf(wire);
+		if (index !== -1) {
+			this.wires.splice(index, 1);
+		}
 	}
-
 	get pinId() {
 		return this.namedPin.id;
 	}
