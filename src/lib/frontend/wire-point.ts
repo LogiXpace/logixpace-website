@@ -7,6 +7,7 @@ import type { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS, type EventIDTypes } from './defaults';
 import type { IO } from './io';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
+import { POWER_STATE_HIGH, POWER_STATE_LOW, type PowerState } from './state';
 import type { Wire } from './wire';
 
 export interface WirePointProps<T> {
@@ -17,12 +18,14 @@ export interface WirePointProps<T> {
 export class WirePoint<T> {
 	position: Vector2D;
 	collider: CircleCollider;
+	bound: CircleCollider;
 	wires: Wire<T>[] = [];
 
 	pinId: T;
 
 	isHovering = false;
-	isActivated = false;
+	powerState: PowerState = POWER_STATE_LOW;
+	isSelected = false;
 
 	dispatcher = new SimulationEventDispatcher();
 
@@ -31,12 +34,13 @@ export class WirePoint<T> {
 		this.pinId = pinId;
 
 		this.collider = new CircleCollider(this.position, DEFUALTS.WIRE_POINT_SIZE);
+		this.bound = new CircleCollider(this.position, DEFUALTS.WIRE_POINT_SIZE + DEFUALTS.WIRE_POINT_PADDING);
 
 		this.initEvents();
 	}
 
 	get activated() {
-		return this.isActivated;
+		return this.powerState === POWER_STATE_HIGH;
 	}
 
 	addWire(wire: Wire<T>) {
@@ -58,6 +62,7 @@ export class WirePoint<T> {
 
 	updateCollider() {
 		this.collider.position.copy(this.position);
+		this.bound.position.copy(this.position);
 	}
 
 	move(delta: Vector2D) {
@@ -67,6 +72,10 @@ export class WirePoint<T> {
 
 	checkHover(pointCollider: PointCollider) {
 		this.resetHover();
+
+		if (this.isSelected && this.bound.isColliding(pointCollider)) {
+			return true;
+		}
 
 		if (this.isCollidingMain(pointCollider)) {
 			this.isHovering = true;
@@ -80,25 +89,37 @@ export class WirePoint<T> {
 		this.isHovering = false;
 	}
 
-	select(pointCollider: PointCollider) {
-		if (this.isCollidingMain(pointCollider)) {
-			return true;
-		}
-
-		return false;
+	select() {
+		this.isSelected = true;
 	}
 
-	deselect() { }
+	deselect() {
+		this.isSelected = false;
+	}
 
 	draw(ctx: CanvasRenderingContext2D, currTime: number, deltaTime: number) {
 		drawCircle(
 			ctx,
 			this.collider.position.x,
 			this.collider.position.y,
-			DEFUALTS.WIRE_POINT_SIZE,
+			this.collider.radius,
 			new CanvasStyle({
-				fillColor: this.isActivated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
+				fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
+
+		if (this.isSelected) {
+			drawCircle(
+				ctx,
+				this.bound.position.x,
+				this.bound.position.y,
+				this.bound.radius,
+				new CanvasStyle({
+					strokeColor: new RGB(0, 0, 0),
+					lineWidth: 1,
+					lineDash: [3, 3]
+				})
+			);
+		}
 	}
 }

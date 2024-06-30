@@ -81,7 +81,6 @@ export class IO<T> {
 	}
 
 	initEvents() {
-		this.dispatcher.addEmiiter(EVENT_IDS.onMove);
 	}
 
 	addWire(wire: Wire<T>) {
@@ -104,7 +103,8 @@ export class IO<T> {
 
 		const result = this.calculateBound();
 		this.bound.position.copy(result.position);
-
+		this.bound.width = result.width;
+		this.bound.height = result.height;
 		this.collider.position.copy(this.position);
 	}
 
@@ -133,11 +133,17 @@ export class IO<T> {
 			);
 		const start = this.position.clone().addVector(dirVector.multScalar(-DEFUALTS.IO_SIZE));
 
+		const p2 = DEFUALTS.IO_SELECT_PADDING ** 2;
+		const hypo = Math.sqrt(2 * p2);
+
 		switch (dir) {
 			case DIRECTION.RIGHT:
 			case DIRECTION.LEFT: {
 				end.y += DEFUALTS.IO_SIZE;
 				start.y -= DEFUALTS.IO_SIZE;
+				const diffDir = start.clone().subVector(end).normalize().multScalar(hypo);
+				start.addVector(diffDir);
+				end.subVector(diffDir);
 				return calculateBoxFromTwoPoint(start, end);
 			}
 
@@ -145,6 +151,9 @@ export class IO<T> {
 			case DIRECTION.BOTTOM: {
 				end.x += DEFUALTS.IO_SIZE;
 				start.x -= DEFUALTS.IO_SIZE;
+				const diffDir = start.clone().subVector(end).normalize().multScalar(hypo);
+				start.addVector(diffDir);
+				end.subVector(diffDir);
 				return calculateBoxFromTwoPoint(start, end);
 			}
 		}
@@ -165,21 +174,26 @@ export class IO<T> {
 	move(delta: Vector2D) {
 		this.position.addVector(delta);
 		this.updateColliders();
-
-		this.dispatcher.dispatch(EVENT_IDS.onMove, delta);
-		this.dispatcher.dispatch(EVENT_IDS.onOutletMove, this.outletPosition);
 	}
 
 	checkHover(pointCollider: PointCollider) {
 		this.resetHover();
 
+		if (this.isSelected && this.bound.isColliding(pointCollider)) {
+			return true;
+		}
+
 		if (this.isCollidingOutlet(pointCollider)) {
 			this.isOutletHovering = true;
 			return true;
-		} else if (this.isCollidingMain(pointCollider)) {
+		}
+
+		if (this.isCollidingMain(pointCollider)) {
 			this.isHovering = true;
 			return true;
-		} else if (this.isCollidingOutletLine(pointCollider)) {
+		}
+
+		if (this.isCollidingOutletLine(pointCollider)) {
 			this.isOutletLineHovering = true;
 			return true;
 		}
@@ -193,14 +207,8 @@ export class IO<T> {
 		this.isHovering = false;
 	}
 
-	select(pointCollider: PointCollider) {
-		if (
-			this.isCollidingMain(pointCollider) ||
-			this.isCollidingOutlet(pointCollider) ||
-			this.isCollidingOutletLine(pointCollider)
-		) {
-			this.isSelected = true;
-		}
+	select() {
+		this.isSelected = true;
 	}
 
 	deselect() {
@@ -239,5 +247,20 @@ export class IO<T> {
 				fillColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR
 			})
 		);
+
+		if (this.isSelected) {
+			drawRectangle(
+				ctx,
+				this.bound.position.x,
+				this.bound.position.y,
+				this.bound.width,
+				this.bound.height,
+				new CanvasStyle({
+					strokeColor: new RGB(0, 0, 0, 1),
+					lineWidth: 1,
+					lineDash: [3, 3]
+				})
+			);
+		}
 	}
 }

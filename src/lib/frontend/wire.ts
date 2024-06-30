@@ -43,6 +43,10 @@ export class Wire<T> {
 		this.collider = new LineCollider(this.startPosition, this.endPosition, DEFUALTS.WIRE_WIDTH);
 	}
 
+	get activated() {
+		return this.start.activated || this.end.activated;
+	}
+
 	updateCollider() {
 		this.collider.startPosition.copy(this.startPosition);
 		this.collider.endPosition.copy(this.endPosition);
@@ -56,19 +60,7 @@ export class Wire<T> {
 			this.endPosition.x,
 			this.endPosition.y,
 			new CanvasStyle({
-				strokeColor: new RGB(100, 100, 100, 0.2),
-				lineWidth: DEFUALTS.WIRE_WIDTH
-			})
-		);
-
-		drawLine(
-			ctx,
-			this.startPosition.x,
-			this.startPosition.y,
-			this.endPosition.x,
-			this.endPosition.y,
-			new CanvasStyle({
-				strokeColor: this.start.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR,
+				strokeColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR,
 				lineWidth: DEFUALTS.WIRE_WIDTH
 			})
 		);
