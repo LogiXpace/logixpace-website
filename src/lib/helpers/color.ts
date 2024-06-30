@@ -12,6 +12,10 @@ export class Color {
 	clone(alpha: number): Color {
 		return new RGB(0, 0, 0, alpha);
 	}
+
+	toRGB(): RGB {
+		return new RGB(0, 0, 0, this.alpha);
+	}
 }
 
 export class RGB extends Color {
@@ -32,6 +36,10 @@ export class RGB extends Color {
 
 	clone(alpha: number) {
 		return new RGB(this.red, this.green, this.blue, alpha);
+	}
+
+	toRGB(): RGB {
+		return new RGB(this.red, this.green, this.blue, this.alpha);
 	}
 }
 
