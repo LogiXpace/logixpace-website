@@ -13,12 +13,14 @@ import { Vector2D } from '$lib/helpers/vector2d';
 import { DEFUALTS, EVENT_IDS } from './defaults';
 import { DIRECTION, getDirectionVector, type Direction } from '../helpers/direction';
 import type { NamedPin } from './named-pin';
-import { Pin, type PinProps } from './pin';
 import { SimulationEventDispatcher, SimulationEventListener } from './simulation-event';
 import type { Wire } from './wire';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from './state';
 
-export interface IOProps<T> extends PinProps<T> {
+export interface IOProps<T> {
+	position: Vector2D;
+	direction: Direction;
+	namedPin: NamedPin<T>;
 	color?: Color;
 }
 
