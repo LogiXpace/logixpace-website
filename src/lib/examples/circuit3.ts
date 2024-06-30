@@ -24,6 +24,8 @@ export function circuit3(): ReturnExample {
 
 	return {
 		init() {
+			simulator = new Simulator();
+
 			pins.push(
 				new Pin(POWER_STATE_LOW),
 				new Pin(POWER_STATE_LOW),
@@ -31,12 +33,10 @@ export function circuit3(): ReturnExample {
 				new Pin(POWER_STATE_LOW)
 			);
 
-			pins[1].connectPin(pins[2]);
+			pins[1].connectPin(simulator, pins[2]);
 
 			new BuiltinNotChip([pins[0]], [pins[2]]);
 			new BuiltinNotChip([pins[2]], [pins[3]]);
-
-			simulator = new Simulator();
 		},
 		run(iterations = 100) {
 			pins[0].update(POWER_STATE_HIGH, simulator);
