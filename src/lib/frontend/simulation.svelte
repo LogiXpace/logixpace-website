@@ -10,6 +10,8 @@
 	import { Vector2D } from '$lib/helpers/vector2d';
 	import { onMount } from 'svelte';
 	import { SimulationContext } from './simulation-context';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 
 	let {
 		offset = new Vector2D(),
@@ -19,6 +21,7 @@
 		simulationContext = $bindable()
 	}: Props<T> = $props();
 
+	let simulationStep = $state(adapter.getSimulationStep());
 	let simulationElement: HTMLDivElement;
 	let canvas: HTMLCanvasElement;
 	let FPS = $state(0);
@@ -70,6 +73,10 @@
 			simulationContext.destroy();
 		};
 	});
+
+	$effect(() => {
+		adapter.setSimulationStep(simulationStep);
+	});
 </script>
 
 <div class="h-full w-full" bind:this={simulationElement}>
@@ -90,5 +97,13 @@
 			finally: have fun creating your own circuits! (but be careful, the simulation lacks so many
 			features and has many bugs)
 		</p>
+	</div>
+	<div
+		class="fixed right-0 top-0 m-2 flex flex-col space-y-2 bg-background *:max-w-[20ch] *:text-xs *:font-semibold"
+	>
+		<Label>
+			Simulation Step
+			<Input placeholder="Simulation Step" bind:value={simulationStep} type="number" min="1" />
+		</Label>
 	</div>
 </div>
