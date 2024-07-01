@@ -7,8 +7,8 @@ import {
 } from '$lib/backend/builtin-chips';
 import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
 import type { Chip } from '$lib/backend/chip';
-import { InputPin } from '$lib/backend/input-pin';
-import { OutputPin } from '$lib/backend/output-pin';
+import { OutwardPin } from '$lib/backend/outward-pin';
+import { InwardPin } from '$lib/backend/inward-pin';
 import { Pin } from '$lib/backend/pin';
 import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/backend/power-state';
 import { Simulator } from '$lib/backend/simulator';
@@ -24,9 +24,11 @@ export class BackendAdapter extends Adapter<number> {
 	private simulator = new Simulator();
 	private pins = new FreeList<Pin>();
 	private chips = new FreeList<Chip>();
+	private simulationStep = 1;
 
-	constructor() {
+	constructor(simulationStep: number) {
 		super('BackendAdapter');
+		this.simulationStep = simulationStep;
 	}
 
 	createPin(state: FrontendPowerState): number {
@@ -34,13 +36,13 @@ export class BackendAdapter extends Adapter<number> {
 		return this.pins.insert(pin);
 	}
 
-	createInputPin(state: FrontendPowerState): number {
-		const pin = new InputPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+	createOutwardPin(state: FrontendPowerState): number {
+		const pin = new OutwardPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
 		return this.pins.insert(pin);
 	}
 
-	createOutputPin(state: FrontendPowerState): number {
-		const pin = new OutputPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+	createInwardPin(state: FrontendPowerState): number {
+		const pin = new InwardPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
 		return this.pins.insert(pin);
 	}
 
@@ -116,7 +118,7 @@ export class BackendAdapter extends Adapter<number> {
 		const outputPins = new Array(outputIds.length);
 		for (let i = 0; i < outputIds.length; i++) {
 			const pin = this.pins.get(outputIds[i]);
-			if (typeof pin === 'number' || pin === undefined) {
+			if (typeof pin === 'number' || pin === undefined || !(pin instanceof OutwardPin)) {
 				throw new Error('Invalid output pin ID');
 			}
 
@@ -171,6 +173,14 @@ export class BackendAdapter extends Adapter<number> {
 	}
 
 	update(): void {
-		this.simulator.simulate(1000);
+		this.simulator.simulate(this.simulationStep);
+	}
+
+	setSimulationStep(step: number): void {
+		this.simulationStep = step;
+	}
+
+	getSimulationStep(): number {
+		return this.simulationStep
 	}
 }

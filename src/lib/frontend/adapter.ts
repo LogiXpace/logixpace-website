@@ -17,12 +17,12 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
-	createInputPin(state: PowerState): T {
+	createInwardPin(state: PowerState): T {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
 
-	createOutputPin(state: PowerState): T {
+	createOutwardPin(state: PowerState): T {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
@@ -63,6 +63,16 @@ export class Adapter<T> {
 	}
 
 	update(): void {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
+	setSimulationStep(step: number): void {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
+	getSimulationStep(): number {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
