@@ -2,7 +2,6 @@ import { clearCanvas, drawCircle, drawRectangle } from '$lib/helpers/draw';
 import { MouseInput } from '$lib/helpers/mouse-input';
 import { Vector2D } from '$lib/helpers/vector2d';
 import { NamedPin, type NamedPinProps } from './named-pin';
-import { Pin } from './pin';
 import { CanvasStyle } from '$lib/helpers/canvas-style';
 import { HSL, RGB } from '$lib/helpers/color';
 import { QuadTree } from '$lib/helpers/quad-tree';
@@ -29,10 +28,10 @@ import { SimulationSelectionManager } from './simulation-selection-manager';
 import { SimulationExportJSON } from './simulation-export-json';
 import { importJSON } from './simulation-import-json';
 
-const QUADTREE_MAX_CAPACITY = 10;
-const QUADTREE_MAX_LEVEL = 15;
+const QUADTREE_MAX_CAPACITY = 15;
+const QUADTREE_MAX_LEVEL = 10;
 const QUADTREE_MAX_NUMBER_OF_VALUES = 1e2;
-const QUADTREE_SIZE = 5e5;
+const QUADTREE_SIZE = 5e6;
 
 export interface SimulationContextProps<T> {
 	ctx: CanvasRenderingContext2D;
@@ -117,14 +116,14 @@ export class SimulationContext<T> {
 	}
 
 	addInput(param: Omit<InputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
-		const input = new Input({ ...param, namedPin: new NamedPin({ id: this.adapter.createInputPin(powerState), name, powerState }) });
+		const input = new Input({ ...param, namedPin: new NamedPin({ id: this.adapter.createOutwardPin(powerState), name, powerState }) });
 		this.entityManager.insertInput(input);
 		this.queryAll();
 		return input;
 	}
 
 	addOutput(param: Omit<OutputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
-		const output = new Output({ ...param, namedPin: new NamedPin({ id: this.adapter.createOutputPin(powerState), name, powerState }) });
+		const output = new Output({ ...param, namedPin: new NamedPin({ id: this.adapter.createInwardPin(powerState), name, powerState }) });
 		this.entityManager.insertOutput(output);
 		this.queryAll();
 		return output;
@@ -159,13 +158,13 @@ export class SimulationContext<T> {
 		chipType: ChipType,
 		inputNames: string[],
 		outputNames: string[],
-		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins' | 'simulationContext' | 'id'>
+		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins' | 'simulationContext' | 'id' | 'type'>
 	) {
 		const inputPins: ChipPin<T>[] = new Array(inputNames.length);
 
 		for (let i = 0; i < inputNames.length; i++) {
 			inputPins[i] = this.addChipPin({
-				namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: inputNames[i] })
+				namedPin: new NamedPin({ id: this.adapter.createInwardPin(POWER_STATE_LOW), name: inputNames[i], powerState: POWER_STATE_LOW })
 			});
 		}
 
@@ -173,7 +172,7 @@ export class SimulationContext<T> {
 
 		for (let i = 0; i < outputNames.length; i++) {
 			outputPins[i] = this.addChipPin({
-				namedPin: this.addNamedPin({ powerState: POWER_STATE_LOW, name: outputNames[i] })
+				namedPin: new NamedPin({ id: this.adapter.createOutwardPin(POWER_STATE_LOW), name: outputNames[i], powerState: POWER_STATE_LOW })
 			});
 		}
 
@@ -196,7 +195,7 @@ export class SimulationContext<T> {
 			return undefined;
 		}
 
-		const chip = new Chip({ ...param, inputPins, outputPins, textWidth, simulationContext: this, id });
+		const chip = new Chip({ ...param, inputPins, outputPins, textWidth, simulationContext: this, id, type: chipType });
 		this.entityManager.insertChip(chip);
 
 		this.queryAll();
@@ -225,16 +224,16 @@ export class SimulationContext<T> {
 
 		if (this.selectionManager.isSelecteed()) {
 			if (this.keyboardInput.isKeyPressed("Delete")) {
+				for (const chip of this.selectionManager.chips) {
+					this.entityManager.destroyChip(chip);
+				}
+
 				for (const input of this.selectionManager.inputs) {
 					this.entityManager.destroyInput(input);
 				}
 
 				for (const output of this.selectionManager.outputs) {
 					this.entityManager.destroyOutput(output);
-				}
-
-				for (const chip of this.selectionManager.chips) {
-					this.entityManager.destroyChip(chip);
 				}
 
 				for (const wirePoint of this.selectionManager.wirePoints) {
@@ -258,7 +257,7 @@ export class SimulationContext<T> {
 				}
 
 				for (const chip of this.selectionManager.chips) {
-					save.serializeChip(chip);
+					save.serializeChip(chip)
 				}
 
 				const json = save.allSerialized(this.screenVectorToWorldVector(this.mouseInput.movePosition));
