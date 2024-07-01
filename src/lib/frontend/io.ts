@@ -82,8 +82,7 @@ export class IO<T> {
 		return this.namedPin.powerState === POWER_STATE_HIGH;
 	}
 
-	initEvents() {
-	}
+	initEvents() {}
 
 	addWire(wire: Wire<T>) {
 		this.wires.push(wire);

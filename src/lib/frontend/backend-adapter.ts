@@ -37,12 +37,16 @@ export class BackendAdapter extends Adapter<number> {
 	}
 
 	createOutwardPin(state: FrontendPowerState): number {
-		const pin = new OutwardPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+		const pin = new OutwardPin(
+			state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW
+		);
 		return this.pins.insert(pin);
 	}
 
 	createInwardPin(state: FrontendPowerState): number {
-		const pin = new InwardPin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
+		const pin = new InwardPin(
+			state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW
+		);
 		return this.pins.insert(pin);
 	}
 
@@ -181,6 +185,6 @@ export class BackendAdapter extends Adapter<number> {
 	}
 
 	getSimulationStep(): number {
-		return this.simulationStep
+		return this.simulationStep;
 	}
 }

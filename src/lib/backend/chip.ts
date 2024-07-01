@@ -1,6 +1,6 @@
-import type { InwardPin } from "./inward-pin";
-import type { OutwardPin } from "./outward-pin";
-import type { Simulator } from "./simulator";
+import type { InwardPin } from './inward-pin';
+import type { OutwardPin } from './outward-pin';
+import type { Simulator } from './simulator';
 
 export type InputPin = InwardPin;
 export type OutputPin = OutwardPin;
@@ -14,7 +14,12 @@ export class Chip {
 	inputLength: number;
 	outputLength: number;
 
-	constructor(inputPins: InputPins, inputLength: number, outputPins: OutputPins, outputLength: number) {
+	constructor(
+		inputPins: InputPins,
+		inputLength: number,
+		outputPins: OutputPins,
+		outputLength: number
+	) {
 		this.inputPins = inputPins;
 		this.inputLength = inputLength;
 
@@ -32,5 +37,5 @@ export class Chip {
 		}
 	}
 
-	process(simulator: Simulator) { }
+	process(simulator: Simulator) {}
 }

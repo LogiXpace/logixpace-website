@@ -1,6 +1,6 @@
-import { Pin } from "./pin";
-import { POWER_STATE_HIGH, POWER_STATE_LOW, type PowerState } from "./power-state";
-import type { Simulator } from "./simulator";
+import { Pin } from './pin';
+import { POWER_STATE_HIGH, POWER_STATE_LOW, type PowerState } from './power-state';
+import type { Simulator } from './simulator';
 
 export class InwardPin extends Pin {
 	constructor(powerState: PowerState) {
@@ -9,8 +9,8 @@ export class InwardPin extends Pin {
 
 	/**
 	 * connect pin
-	 * 
-	 * @param simulator 
+	 *
+	 * @param simulator
 	 * @param pin - the pin to connect to
 	 */
 	connectPin(simulator: Simulator, pin: Pin) {
@@ -26,8 +26,8 @@ export class InwardPin extends Pin {
 
 	/**
 	 * disconnect pin
-	 * 
-	 * @param simulator 
+	 *
+	 * @param simulator
 	 * @param pin - the pin to connect to
 	 */
 	disconnectPin(simulator: Simulator, pin: Pin) {

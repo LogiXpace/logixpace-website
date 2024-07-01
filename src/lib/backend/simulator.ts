@@ -7,8 +7,7 @@ export class Simulator {
 	 */
 	propagtePins = new Queue<Pin>();
 
-	constructor() {
-	}
+	constructor() {}
 
 	/**
 	 * queue pin that needs to be propagated.

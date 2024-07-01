@@ -36,8 +36,8 @@ export class Pin {
 
 	/**
 	 * connect pin
-	 * 
-	 * @param simulator 
+	 *
+	 * @param simulator
 	 * @param pin - the pin to connect to
 	 */
 	connectPin(simulator: Simulator, pin: Pin) {
@@ -58,8 +58,8 @@ export class Pin {
 
 	/**
 	 * disconnect pin
-	 * 
-	 * @param simulator 
+	 *
+	 * @param simulator
 	 * @param pin - the pin to connect to
 	 */
 	disconnectPin(simulator: Simulator, pin: Pin) {
@@ -89,8 +89,8 @@ export class Pin {
 	}
 
 	/**
-	 * 
-	 * @param simulator 
+	 *
+	 * @param simulator
 	 */
 	destroy(simulator: Simulator) {
 		for (const connectedPin of this.connectedPins) {
@@ -135,7 +135,7 @@ export class Pin {
 
 	/**
 	 * change influx based on the power state from other pins: power state high, increment; power state low, decrement.
-	 * 
+	 *
 	 * @important this method can ONLY be called on the pins or chips that has connections to this pin.
 	 * @param powerState - the power state to use to determine whether the influx will decrement or increment.
 	 */

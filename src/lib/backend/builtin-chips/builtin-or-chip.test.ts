@@ -7,8 +7,8 @@ import { expect } from 'vitest';
 import { test } from 'vitest';
 import { Simulator } from '../simulator';
 import { expectBuiltinChipOutputCorrectly } from '../test';
-import { InwardPin } from "../inward-pin";
-import { OutwardPin } from "../outward-pin";
+import { InwardPin } from '../inward-pin';
+import { OutwardPin } from '../outward-pin';
 
 describe('builtin or chip', () => {
 	describe('should be created succesfully', () => {

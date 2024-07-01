@@ -45,7 +45,17 @@ export class Chip<T> {
 	isHovering = false;
 	isSelected = false;
 
-	constructor({ position, type, id, textWidth, name, color, inputPins, outputPins, simulationContext }: ChipProps<T>) {
+	constructor({
+		position,
+		type,
+		id,
+		textWidth,
+		name,
+		color,
+		inputPins,
+		outputPins,
+		simulationContext
+	}: ChipProps<T>) {
 		this.position = position.clone();
 		this.name = name;
 		this.color = color;
@@ -57,7 +67,11 @@ export class Chip<T> {
 		const height = maxPins * (DEFUALTS.PIN_OUTLET_SIZE + 5) + (DEFUALTS.CHIP_FONT_SIZE * 4) / 3;
 
 		this.collider = new BoxCollider(position, width, height);
-		this.bound = new BoxCollider(position.clone().subScalar(DEFUALTS.CHIP_SELECT_PADDING), width + DEFUALTS.CHIP_SELECT_PADDING * 2, height + DEFUALTS.CHIP_SELECT_PADDING * 2);
+		this.bound = new BoxCollider(
+			position.clone().subScalar(DEFUALTS.CHIP_SELECT_PADDING),
+			width + DEFUALTS.CHIP_SELECT_PADDING * 2,
+			height + DEFUALTS.CHIP_SELECT_PADDING * 2
+		);
 
 		this.inputPins = inputPins;
 

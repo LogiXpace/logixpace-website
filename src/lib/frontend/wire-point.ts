@@ -34,7 +34,10 @@ export class WirePoint<T> {
 		this.pinId = pinId;
 
 		this.collider = new CircleCollider(this.position, DEFUALTS.WIRE_POINT_SIZE);
-		this.bound = new CircleCollider(this.position, DEFUALTS.WIRE_POINT_SIZE + DEFUALTS.WIRE_POINT_PADDING);
+		this.bound = new CircleCollider(
+			this.position,
+			DEFUALTS.WIRE_POINT_SIZE + DEFUALTS.WIRE_POINT_PADDING
+		);
 
 		this.initEvents();
 	}
@@ -54,7 +57,7 @@ export class WirePoint<T> {
 		}
 	}
 
-	initEvents() { }
+	initEvents() {}
 
 	isCollidingMain(collider: Collider) {
 		return this.collider.isColliding(collider);

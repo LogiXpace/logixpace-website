@@ -65,13 +65,7 @@ export class SimulationContext<T> {
 
 	adapter: Adapter<T>;
 
-	constructor({
-		ctx,
-		offset,
-		scale,
-		scaleFactor,
-		adapter
-	}: SimulationContextProps<T>) {
+	constructor({ ctx, offset, scale, scaleFactor, adapter }: SimulationContextProps<T>) {
 		this.ctx = ctx;
 		this.offset = offset.clone();
 		this.scale = scale;
@@ -116,14 +110,20 @@ export class SimulationContext<T> {
 	}
 
 	addInput(param: Omit<InputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
-		const input = new Input({ ...param, namedPin: new NamedPin({ id: this.adapter.createOutwardPin(powerState), name, powerState }) });
+		const input = new Input({
+			...param,
+			namedPin: new NamedPin({ id: this.adapter.createOutwardPin(powerState), name, powerState })
+		});
 		this.entityManager.insertInput(input);
 		this.queryAll();
 		return input;
 	}
 
 	addOutput(param: Omit<OutputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
-		const output = new Output({ ...param, namedPin: new NamedPin({ id: this.adapter.createInwardPin(powerState), name, powerState }) });
+		const output = new Output({
+			...param,
+			namedPin: new NamedPin({ id: this.adapter.createInwardPin(powerState), name, powerState })
+		});
 		this.entityManager.insertOutput(output);
 		this.queryAll();
 		return output;
@@ -158,13 +158,20 @@ export class SimulationContext<T> {
 		chipType: ChipType,
 		inputNames: string[],
 		outputNames: string[],
-		param: Omit<ChipProps<T>, 'textWidth' | 'inputPins' | 'outputPins' | 'simulationContext' | 'id' | 'type'>
+		param: Omit<
+			ChipProps<T>,
+			'textWidth' | 'inputPins' | 'outputPins' | 'simulationContext' | 'id' | 'type'
+		>
 	) {
 		const inputPins: ChipPin<T>[] = new Array(inputNames.length);
 
 		for (let i = 0; i < inputNames.length; i++) {
 			inputPins[i] = this.addChipPin({
-				namedPin: new NamedPin({ id: this.adapter.createInwardPin(POWER_STATE_LOW), name: inputNames[i], powerState: POWER_STATE_LOW })
+				namedPin: new NamedPin({
+					id: this.adapter.createInwardPin(POWER_STATE_LOW),
+					name: inputNames[i],
+					powerState: POWER_STATE_LOW
+				})
 			});
 		}
 
@@ -172,7 +179,11 @@ export class SimulationContext<T> {
 
 		for (let i = 0; i < outputNames.length; i++) {
 			outputPins[i] = this.addChipPin({
-				namedPin: new NamedPin({ id: this.adapter.createOutwardPin(POWER_STATE_LOW), name: outputNames[i], powerState: POWER_STATE_LOW })
+				namedPin: new NamedPin({
+					id: this.adapter.createOutwardPin(POWER_STATE_LOW),
+					name: outputNames[i],
+					powerState: POWER_STATE_LOW
+				})
 			});
 		}
 
@@ -195,7 +206,15 @@ export class SimulationContext<T> {
 			return undefined;
 		}
 
-		const chip = new Chip({ ...param, inputPins, outputPins, textWidth, simulationContext: this, id, type: chipType });
+		const chip = new Chip({
+			...param,
+			inputPins,
+			outputPins,
+			textWidth,
+			simulationContext: this,
+			id,
+			type: chipType
+		});
 		this.entityManager.insertChip(chip);
 
 		this.queryAll();
@@ -223,7 +242,7 @@ export class SimulationContext<T> {
 		this.keyboardInput.handleKeyPressed(e.key);
 
 		if (this.selectionManager.isSelecteed()) {
-			if (this.keyboardInput.isKeyPressed("Delete")) {
+			if (this.keyboardInput.isKeyPressed('Delete')) {
 				for (const chip of this.selectionManager.chips) {
 					this.entityManager.destroyChip(chip);
 				}
@@ -241,7 +260,7 @@ export class SimulationContext<T> {
 				}
 
 				this.selectionManager.clear();
-			} else if (this.keyboardInput.isKeyCombinationPressedOnly(["Control", 'c'])) {
+			} else if (this.keyboardInput.isKeyCombinationPressedOnly(['Control', 'c'])) {
 				const save = new SimulationExportJSON<T>();
 
 				for (const input of this.selectionManager.inputs) {
@@ -257,17 +276,19 @@ export class SimulationContext<T> {
 				}
 
 				for (const chip of this.selectionManager.chips) {
-					save.serializeChip(chip)
+					save.serializeChip(chip);
 				}
 
-				const json = save.allSerialized(this.screenVectorToWorldVector(this.mouseInput.movePosition));
+				const json = save.allSerialized(
+					this.screenVectorToWorldVector(this.mouseInput.movePosition)
+				);
 				navigator.clipboard.writeText(JSON.stringify(json));
 				console.log(json);
 			}
 		}
 
-		if (this.keyboardInput.isKeyCombinationPressedOnly(["Control", "v"])) {
-			navigator.clipboard.readText().then(text => {
+		if (this.keyboardInput.isKeyCombinationPressedOnly(['Control', 'v'])) {
+			navigator.clipboard.readText().then((text) => {
 				importJSON(text, this);
 			});
 		}
@@ -316,10 +337,7 @@ export class SimulationContext<T> {
 		}
 	}
 
-	handleLeftMouseDown(
-		mouseWorldPosition: Vector2D,
-		mouseCollider: PointCollider
-	) {
+	handleLeftMouseDown(mouseWorldPosition: Vector2D, mouseCollider: PointCollider) {
 		if (this.hover === undefined) {
 			if (this.wireCreatingManager.isCreating()) {
 				const wire = this.entityManager.queryWireByPoint(mouseCollider);
@@ -349,21 +367,24 @@ export class SimulationContext<T> {
 		}
 
 		if (
-			(
-				this.hover instanceof Input ||
+			(this.hover instanceof Input ||
 				this.hover instanceof Output ||
-				this.hover instanceof ChipPin
-			) && this.hover.isOutletHovering
+				this.hover instanceof ChipPin) &&
+			this.hover.isOutletHovering
 		) {
 			if (!this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.createOn(this.hover.outletPosition, this.hover);
 			} else {
 				this.wireCreatingManager.endOn(this.hover.outletPosition, this.hover);
 			}
-			return
+			return;
 		}
 
-		if (this.hover instanceof WirePoint && this.hover.isHovering && !this.keyboardInput.isKeyPressed('Control')) {
+		if (
+			this.hover instanceof WirePoint &&
+			this.hover.isHovering &&
+			!this.keyboardInput.isKeyPressed('Control')
+		) {
 			if (!this.wireCreatingManager.isCreating()) {
 				this.wireCreatingManager.createOn(this.hover.position, this.hover);
 			} else {
@@ -559,27 +580,28 @@ export class SimulationContext<T> {
 			}
 		}
 
-		let queried: HoverAndSelectEntity<T> | undefined = this.entityManager.queryInputByPoint(mouseCollider);
+		let queried: HoverAndSelectEntity<T> | undefined =
+			this.entityManager.queryInputByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.entityManager.queryOutputByPoint(mouseCollider)
+		queried = this.entityManager.queryOutputByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.entityManager.queryWirePointByPoint(mouseCollider)
+		queried = this.entityManager.queryWirePointByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.entityManager.queryChipByPoint(mouseCollider)
+		queried = this.entityManager.queryChipByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
 
-		queried = this.entityManager.queryChipPinByPoint(mouseCollider)
+		queried = this.entityManager.queryChipPinByPoint(mouseCollider);
 		if (queried !== undefined && queried.checkHover(mouseCollider)) {
 			return queried;
 		}
@@ -638,10 +660,15 @@ export class SimulationContext<T> {
 	}
 
 	drawEntities(currTime: number, deltaTime: number) {
-
-		const differenceInputs = this.entityManager.inputQueries.difference(this.selectionManager.inputs);
-		const differenceOutputs = this.entityManager.outputQueries.difference(this.selectionManager.outputs);
-		const differenceWirePoints = this.entityManager.wirePointQueries.difference(this.selectionManager.wirePoints);
+		const differenceInputs = this.entityManager.inputQueries.difference(
+			this.selectionManager.inputs
+		);
+		const differenceOutputs = this.entityManager.outputQueries.difference(
+			this.selectionManager.outputs
+		);
+		const differenceWirePoints = this.entityManager.wirePointQueries.difference(
+			this.selectionManager.wirePoints
+		);
 		const differenceChips = this.entityManager.chipQueries.difference(this.selectionManager.chips);
 
 		for (const wire of this.entityManager.wireQueries) {
