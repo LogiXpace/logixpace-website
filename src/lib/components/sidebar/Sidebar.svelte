@@ -6,7 +6,7 @@
 	let menuItems = [
 		{ name: 'Home', icon: 'home', href: '/dashboard' },
 		{ name: 'Profile', icon: 'user', href: '/dashboard/profile' },
-		{ name: 'Settings', icon: 'cog', href: '/dashboard/settings' },
+		// { name: 'Account', icon: 'account', href: '/dashboard/account' },
 		{ name: 'Inbox', icon: 'inbox', href: '#' },
 		{ name: 'Logout', icon: 'logout', href: '/logout' }
 	];

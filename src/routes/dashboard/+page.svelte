@@ -1,3 +1,10 @@
+<script lang="ts">
+	import { getContext } from 'svelte';
+
+	let title = getContext('title-context');
+	title.value = 'Dashboard';
+</script>
+
 <!-- Main Dashboard Content -->
 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
 	<!-- Example Widget 1 -->
