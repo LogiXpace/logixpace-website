@@ -86,7 +86,7 @@
 	>
 		<span>FPS: {FPS.toPrecision(3)}</span>
 		<p>
-			to toggle the inputs, press <kbd>shift</kbd> + mouse click
+			to toggle the inputs, press <kbd>ctrl</kbd> + click
 		</p>
 		<p>to create new enitities, right click on an empty area</p>
 		<p>
@@ -94,8 +94,9 @@
 			held on the mouse cursor until you click on another outlet.
 		</p>
 		<p>
-			finally: have fun creating your own circuits! (but be careful, the simulation lacks so many
-			features and has many bugs)
+			select multiple entites and press <kbd>delete</kbd> to delete them, you can also press
+			<kbd>ctrl</kbd>
+			+ c to copy and <kbd>ctrl</kbd> + v to paste
 		</p>
 	</div>
 	<div
