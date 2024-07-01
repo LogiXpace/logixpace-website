@@ -44,7 +44,7 @@ export class Wire<T> {
 	}
 
 	get activated() {
-		return this.start.activated || this.end.activated;
+		return this.start.activated && this.end.activated;
 	}
 
 	updateCollider() {
