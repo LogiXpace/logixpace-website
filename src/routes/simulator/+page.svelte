@@ -10,8 +10,6 @@
 
 <div class="h-screen w-screen overflow-hidden">
 	<AddEntitiesContextMenu {simulationContext}>
-		<Simulation scale={1} adapter={new BackendAdapter()} bind:simulationContext />
+		<Simulation scale={1} adapter={new BackendAdapter(1)} bind:simulationContext />
 	</AddEntitiesContextMenu>
 </div>
-
-<!-- {#if simulationContext !== undefined}{/if} -->
