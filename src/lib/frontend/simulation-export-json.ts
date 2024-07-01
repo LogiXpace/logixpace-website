@@ -2,6 +2,7 @@ import type { RGB } from "$lib/helpers/color";
 import type { Vector2D } from "$lib/helpers/vector2d";
 import type { Chip } from "./chip";
 import { ChipPin } from "./chip-pin";
+import type { ChipType } from "./chip-types";
 import { Input } from "./input";
 import type { NamedPin } from "./named-pin";
 import { Output } from "./output";
@@ -35,7 +36,7 @@ export type ChipPinSerialized = {
 }
 
 export type ChipSerialized<T> = {
-  id: T;
+  type: ChipType;
   name: string;
   position: Vector2D;
   color: RGB;
@@ -120,36 +121,40 @@ export class SimulationExportJSON<T> {
           const wireIndex = this.serializeWire(wire);
           serialized.wireIndices.push(wireIndex);
           wireIndices.push(wireIndex);
+          continue;
         }
       }
 
       if (otherWireEntity instanceof Output) {
         const serializedIndex = this.mapOutputs.get(otherWireEntity);
         if (serializedIndex !== undefined) {
-          const serialized = this.inputsSerialized[serializedIndex];
+          const serialized = this.outputsSerialized[serializedIndex];
           const wireIndex = this.serializeWire(wire);
           serialized.wireIndices.push(wireIndex);
           wireIndices.push(wireIndex);
+          continue;
         }
       }
 
       if (otherWireEntity instanceof ChipPin) {
         const serializedIndex = this.mapChipPins.get(otherWireEntity);
         if (serializedIndex !== undefined) {
-          const serialized = this.inputsSerialized[serializedIndex];
+          const serialized = this.chipPinsSerialized[serializedIndex];
           const wireIndex = this.serializeWire(wire);
           serialized.wireIndices.push(wireIndex);
           wireIndices.push(wireIndex);
+          continue;
         }
       }
 
       if (otherWireEntity instanceof WirePoint) {
         const serializedIndex = this.mapWirePoints.get(otherWireEntity);
         if (serializedIndex !== undefined) {
-          const serialized = this.inputsSerialized[serializedIndex];
+          const serialized = this.wirePointsSerialized[serializedIndex];
           const wireIndex = this.serializeWire(wire);
           serialized.wireIndices.push(wireIndex);
           wireIndices.push(wireIndex);
+          continue;
         }
       }
     }
@@ -268,9 +273,9 @@ export class SimulationExportJSON<T> {
 
   serializeChip(chip: Chip<T>) {
     const serializedChip: ChipSerialized<T> = {
-      id: chip.id,
       name: chip.name,
       position: chip.position,
+      type: chip.type,
       color: chip.color.toRGB(),
       inputPinIndices: chip.inputPins.map(pin => this.serializeChipPin(pin)),
       outputPinIndices: chip.outputPins.map(pin => this.serializeChipPin(pin))
