@@ -11,6 +11,7 @@ import { DIRECTION, getDirectionVector, type Direction } from '$lib/helpers/dire
 import { drawCircle, drawLine, drawRectangle } from '$lib/helpers/draw';
 import { Vector2D } from '$lib/helpers/vector2d';
 import type { ChipPin } from './chip-pin';
+import type { ChipType } from './chip-types';
 import { DEFUALTS } from './defaults';
 import { NamedPin } from './named-pin';
 import type { SimulationContext } from './simulation-context';
@@ -19,6 +20,7 @@ import type { Wire, WireEntity } from './wire';
 
 export interface ChipProps<T> {
 	id: T;
+	type: ChipType;
 	position: Vector2D;
 	name: string;
 	textWidth: number;
@@ -30,6 +32,7 @@ export interface ChipProps<T> {
 
 export class Chip<T> {
 	id: T;
+	type: ChipType;
 	position: Vector2D;
 	name: string;
 	color: Color;
@@ -42,11 +45,12 @@ export class Chip<T> {
 	isHovering = false;
 	isSelected = false;
 
-	constructor({ position, id, textWidth, name, color, inputPins, outputPins, simulationContext }: ChipProps<T>) {
+	constructor({ position, type, id, textWidth, name, color, inputPins, outputPins, simulationContext }: ChipProps<T>) {
 		this.position = position.clone();
 		this.name = name;
 		this.color = color;
 		this.id = id;
+		this.type = type;
 
 		const width = 10 + textWidth + 10;
 		const maxPins = Math.max(inputPins.length, outputPins.length);
