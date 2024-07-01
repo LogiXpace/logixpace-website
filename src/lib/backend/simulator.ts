@@ -1,19 +1,20 @@
 import { Queue } from '$lib/helpers/queue';
+import { Pin } from './pin';
 
 export class Simulator {
+	/**
+	 * holds all the pins that needs to be propagated.
+	 */
+	propagtePins = new Queue<Pin>();
+
 	constructor() {
-		/**
-		 * holds all the pins that needs to be propagated.
-		 * @type {Queue<import("./pin").Pin>}
-		 */
-		this.propagtePins = new Queue();
 	}
 
 	/**
 	 * queue pin that needs to be propagated.
-	 * @param {import("./pin").Pin} pin
+	 * @param pin
 	 */
-	queuePin(pin) {
+	queuePin(pin: Pin) {
 		this.propagtePins.enqueue(pin);
 	}
 
@@ -34,7 +35,7 @@ export class Simulator {
 
 	/**
 	 * run the simulation with how many steps.
-	 * @param {number} steps - the number of steps to simulate with.
+	 * @param steps - the number of steps to simulate with.
 	 */
 	simulate(steps = 100) {
 		for (let i = 0; i < steps && this.propagtePins.peek() !== undefined; i++) {

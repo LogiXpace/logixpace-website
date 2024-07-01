@@ -1,13 +1,9 @@
 import { describe } from 'vitest';
 import { expect } from 'vitest';
 import { test } from 'vitest';
-import { circuits } from '../examples';
+import { circuits, type ReturnExample } from '../examples';
 
-/**
- *
- * @param {import('../examples').ReturnExample} example
- */
-function testExample(example) {
+function testExample(example: ReturnExample) {
 	example.init();
 	example.run();
 	expect(example.pins.map((v) => v.powerState)).toStrictEqual(example.expectPowerStates);

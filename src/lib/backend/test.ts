@@ -3,16 +3,18 @@ import { Pin } from './pin';
 import { POWER_STATE_LOW, type PowerState } from './power-state';
 import { Simulator } from './simulator';
 import type { BuiltinChip } from './builtin-chip';
+import type { InputPins, OutputPins } from './chip';
+import { InwardPin } from './inward-pin';
+import { OutwardPin } from './outward-pin';
 
 /**
  *
- * @template T
  * @param builtinChipConstructor - the constructor to create the builtin chip
- * @paraminputPowerStates - the initial input powerStates
+ * @param inputPowerStates - the initial input powerStates
  * @param expectedPowerState - the expected power state to test with
  */
 export function expectBuiltinChipOutputCorrectly<T>(
-	builtinChipConstructor: new (inputPins: Pin[], outputPins: Pin[]) => T,
+	builtinChipConstructor: new (inputPins: InputPins, outputPins: OutputPins) => T,
 	inputPowerStates: PowerState[],
 	expectedPowerState: PowerState
 ) {
@@ -20,10 +22,10 @@ export function expectBuiltinChipOutputCorrectly<T>(
 
 	for (let i = 0; i < inputPowerStates.length; i++) {
 		const powerState = inputPowerStates[i];
-		inputPins.push(new Pin(powerState));
+		inputPins.push(new InwardPin(powerState));
 	}
 
-	const o = new Pin(POWER_STATE_LOW);
+	const o = new OutwardPin(POWER_STATE_LOW);
 	new builtinChipConstructor(inputPins, [o]);
 
 	const simulator = new Simulator();

@@ -1,22 +1,22 @@
 import { bench, describe } from 'vitest';
-import { circuits } from '../examples';
+import { circuits, type ReturnExample } from '../examples';
 
 /**
  *
- * @param {import('../examples').ReturnExample} example
- * @param {string} name - the name of the function
+ * @param example
+ * @param name - the name of the function
  */
-function benchExampleOnlyRun(example, name) {
+function benchExampleOnlyRun(example: ReturnExample, name: string) {
 	example.init();
 	bench(`${name}`, example.run);
 }
 
 /**
  *
- * @param {import('../examples').ReturnExample} example
- * @param {string} name - the name of the function
+ * @param example
+ * @param name - the name of the function
  */
-function benchExampleOnlyInit(example, name) {
+function benchExampleOnlyInit(example: ReturnExample, name: string) {
 	bench(`${name}`, () => {
 		example.init();
 	});
@@ -24,10 +24,10 @@ function benchExampleOnlyInit(example, name) {
 
 /**
  *
- * @param {import('../examples').ReturnExample} example
- * @param {string} name - the name of the function
+ * @param example
+ * @param name - the name of the function
  */
-function benchExampleRunAndInit(example, name) {
+function benchExampleRunAndInit(example: ReturnExample, name: string) {
 	bench(`${name}`, () => {
 		example.init();
 		example.run();

@@ -1,44 +1,46 @@
+import { Chip } from './chip';
 import { MAXIMUM_LEVEL } from './level';
-import { POWER_STATE_HIGH, POWER_STATE_LOW } from './power-state';
+import { POWER_STATE_HIGH, POWER_STATE_LOW, type PowerState } from './power-state';
+import type { Simulator } from './simulator';
 
 export class Pin {
+	powerState: PowerState;
+
+	/**
+	 * holds all the pins that this pin has connection to.
+	 */
+	connectedPins = new Set<Pin>();
+
+	/**
+	 * holds all the chips that this pin has connection to.
+	 */
+	connectedChips = new Set<Chip>();
+
+	/**
+	 * records number of connections that other pins linked to this
+	 */
+	maximumInfluencers = 0;
+
+	/**
+	 * number of power state high of the other pins, which have connection to this pin.
+	 */
+	influx = 0;
+
 	/**
 	 *
-	 * @param {import("./power-state").PowerState} powerState - the inital power state
+	 * @param powerState - the inital power state
 	 */
-	constructor(powerState) {
+	constructor(powerState: PowerState) {
 		this.powerState = powerState;
-
-		/**
-		 * holds all the pins that this pin has connection to.
-		 * @type {Set<Pin>}
-		 */
-		this.connectedPins = new Set();
-
-		/**
-		 * holds all the chips that this pin has connection to.
-		 * @type {Set<import("./chip").Chip>}
-		 */
-		this.connectedChips = new Set();
-
-		/**
-		 * records number of connections that other pins linked to this
-		 */
-		this.maximumInfluencers = 0;
-
-		/**
-		 * number of power state high of the other pins, which have connection to this pin.
-		 */
-		this.influx = 0;
 	}
 
 	/**
 	 * connect pin
 	 * 
-	 * @param {import('./simulator').Simulator} simulator 
-	 * @param {Pin} pin - the pin to connect to
+	 * @param simulator 
+	 * @param pin - the pin to connect to
 	 */
-	connectPin(simulator, pin) {
+	connectPin(simulator: Simulator, pin: Pin) {
 		pin.connectedPins.add(this);
 		this.connectedPins.add(pin);
 
@@ -57,10 +59,10 @@ export class Pin {
 	/**
 	 * disconnect pin
 	 * 
-	 * @param {import('./simulator').Simulator} simulator 
-	 * @param {Pin} pin - the pin to connect to
+	 * @param simulator 
+	 * @param pin - the pin to connect to
 	 */
-	disconnectPin(simulator, pin) {
+	disconnectPin(simulator: Simulator, pin: Pin) {
 		this.connectedPins.delete(pin);
 		pin.connectedPins.delete(this);
 
@@ -88,9 +90,9 @@ export class Pin {
 
 	/**
 	 * 
-	 * @param {import('./simulator').Simulator} simulator 
+	 * @param simulator 
 	 */
-	destroy(simulator) {
+	destroy(simulator: Simulator) {
 		for (const connectedPin of this.connectedPins) {
 			connectedPin.disconnectPin(simulator, this);
 		}
@@ -101,18 +103,17 @@ export class Pin {
 
 	/**
 	 * connect chip
-	 * @param {import("./chip").Chip} chip - the chip to connect to
+	 * @param chip - the chip to connect to
 	 */
-	connectChip(chip) {
+	connectChip(chip: Chip) {
 		this.connectedChips.add(chip);
 	}
 
 	/**
 	 * check if the pin is updatable
-	 * @param {import("./power-state").PowerState} powerState - the power state to check if it is updatable
-	 * @returns {boolean}
+	 * @param powerState - the power state to check if it is updatable
 	 */
-	isUpdatable(powerState) {
+	isUpdatable(powerState: PowerState): boolean {
 		/**
 		 * update when the power state is different from the internal power state. there are 2 cases.
 		 * case 1: power state high && internal power state low
@@ -136,19 +137,19 @@ export class Pin {
 	 * change influx based on the power state from other pins: power state high, increment; power state low, decrement.
 	 * 
 	 * @important this method can ONLY be called on the pins or chips that has connections to this pin.
-	 * @param {import("./power-state").PowerState} powerState - the power state to use to determine whether the influx will decrement or increment.
+	 * @param powerState - the power state to use to determine whether the influx will decrement or increment.
 	 */
-	changeInflux(powerState) {
+	changeInflux(powerState: PowerState) {
 		this.influx += Number(powerState === POWER_STATE_HIGH) - Number(powerState !== POWER_STATE_LOW);
 	}
 
 	/**
 	 * set the internal power state when it is updatable and queue it on the simulator to propagte it later.
 	 *
-	 * @param {import("./power-state").PowerState} powerState - the power state to update to
-	 * @param {import("./simulator").Simulator} simulator - the simulator to run this update method
+	 * @param powerState - the power state to update to
+	 * @param simulator - the simulator to run this update method
 	 */
-	update(powerState, simulator) {
+	update(powerState: PowerState, simulator: Simulator) {
 		// check if it is updatable
 		if (!this.isUpdatable(powerState)) return;
 
@@ -163,9 +164,9 @@ export class Pin {
 	 * propogating the internal power state to other connected chips or pins.
 	 *
 	 * @important this method is ONLY called in the simulator step method.
-	 * @param {import("./simulator").Simulator} simulator
+	 * @param simulator
 	 */
-	propogate(simulator) {		
+	propogate(simulator: Simulator) {
 		// loop over the connected pins to update them with this internal power state.
 		for (const connectedPin of this.connectedPins) {
 			// change influx
