@@ -43,7 +43,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
     if (namedPin === undefined) {
       const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
       namedPin = new NamedPin({
-        id: simulationContext.entityManager.adapter.createInputPin(namedPinSerialized.powerState),
+        id: simulationContext.entityManager.adapter.createOutwardPin(namedPinSerialized.powerState),
         name: namedPinSerialized.name,
         powerState: namedPinSerialized.powerState
       });
@@ -71,7 +71,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
     if (namedPin === undefined) {
       const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
       namedPin = new NamedPin({
-        id: simulationContext.entityManager.adapter.createOutputPin(namedPinSerialized.powerState),
+        id: simulationContext.entityManager.adapter.createInwardPin(namedPinSerialized.powerState),
         name: namedPinSerialized.name,
         powerState: namedPinSerialized.powerState
       });
@@ -90,7 +90,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
     simulationContext.selectionManager.selectOutput(output);
   }
 
-  const addChipPin = (chipPinSerialzedIndex: number) => {
+  const addChipPin = (chipPinSerialzedIndex: number, input: boolean = true) => {
     const chipPinSerialized = chipPinsSerialized[chipPinSerialzedIndex];
 
     const namedPinSerialzedIndex = chipPinSerialized.namedPinIndex;
@@ -99,7 +99,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
     if (namedPin === undefined) {
       const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
       namedPin = new NamedPin({
-        id: simulationContext.entityManager.adapter.createPin(namedPinSerialized.powerState),
+        id: input ? simulationContext.entityManager.adapter.createInwardPin(namedPinSerialized.powerState) : simulationContext.entityManager.adapter.createOutwardPin(namedPinSerialized.powerState),
         name: namedPinSerialized.name,
         powerState: namedPinSerialized.powerState
       });
@@ -144,15 +144,19 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
     const measure = simulationContext.ctx.measureText(chipSerialized.name);
     const textWidth = measure.width;
 
+    const inputPins = chipSerialized.inputPinIndices.map(pinIndex => addChipPin(pinIndex));
+    const outputPins = chipSerialized.outputPinIndices.map(pinIndex => addChipPin(pinIndex, false));
+
     const chip = new Chip({
       name: chipSerialized.name,
       position: new Vector2D(chipSerialized.position.x, chipSerialized.position.y).addVector(delta),
       color: new RGB(chipSerialized.color.red, chipSerialized.color.green, chipSerialized.color.blue),
+      type: chipSerialized.type,
       textWidth,
-      id: chipSerialized.id,
       simulationContext,
-      inputPins: chipSerialized.inputPinIndices.map(pinIndex => addChipPin(pinIndex)),
-      outputPins: chipSerialized.outputPinIndices.map(pinIndex => addChipPin(pinIndex))
+      id: simulationContext.adapter.createChip(chipSerialized.type, inputPins.map(pin => pin.namedPin.id), outputPins.map(pin => pin.namedPin.id)) as T,
+      inputPins,
+      outputPins
     });
 
     simulationContext.entityManager.insertChip(chip);
