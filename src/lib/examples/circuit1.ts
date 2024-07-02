@@ -1,8 +1,8 @@
 import type { ReturnExample } from '.';
-import { BuiltinAndChip, BuiltinOrChip } from '../backend/builtin-chips';
-import { Pin } from '../backend/pin';
-import { POWER_STATE_HIGH, POWER_STATE_LOW } from '../backend/power-state';
-import { Simulator } from '../backend/simulator';
+import { BuiltinAndChip, BuiltinOrChip } from '../core/builtin-chips';
+import { Pin } from '../core/pin';
+import { POWER_STATE_HIGH, POWER_STATE_LOW } from '../core/power-state';
+import { Simulator } from '../core/simulator';
 
 /**
  * p0 (1)

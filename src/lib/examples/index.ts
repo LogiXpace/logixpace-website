@@ -1,5 +1,5 @@
-import type { Pin } from '$lib/backend/pin';
-import type { PowerState } from '$lib/backend/power-state';
+import type { Pin } from '$lib/engine/pin';
+import type { PowerState } from '$lib/core/power-state';
 import { circuit1 } from './circuit1';
 import { circuit2 } from './circuit2';
 import { circuit3 } from './circuit3';
