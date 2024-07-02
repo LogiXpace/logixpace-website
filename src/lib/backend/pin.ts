@@ -124,7 +124,10 @@ export class Pin {
 	 * @param powerState - the power state to use to determine whether the influx will decrement or increment.
 	 */
 	changeInflux(powerState: PowerState) {
-		this.influx += Number(powerState === POWER_STATE_HIGH) - Number(powerState !== POWER_STATE_LOW);
+		this.influx += Number(powerState === POWER_STATE_HIGH) - Number(powerState === POWER_STATE_LOW);
+		if (this.influx < 0) {
+			this.influx = 0;
+		}
 	}
 
 	/**
