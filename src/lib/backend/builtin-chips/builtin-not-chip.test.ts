@@ -7,14 +7,13 @@ import { expect } from 'vitest';
 import { test } from 'vitest';
 import { Simulator } from '../simulator';
 import { expectBuiltinChipOutputCorrectly } from '../test';
-import { InwardPin } from '../inward-pin';
-import { OutwardPin } from '../outward-pin';
+
 
 describe('builtin not chip', () => {
 	describe('should be created succesfully', () => {
 		test('for correct parameters', () => {
-			const a = new InwardPin(POWER_STATE_LOW);
-			const o = new OutwardPin(POWER_STATE_LOW);
+			const a = new Pin(POWER_STATE_LOW);
+			const o = new Pin(POWER_STATE_LOW);
 			expect(new BuiltinNotChip([a], [o]));
 		});
 	});

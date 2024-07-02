@@ -1,9 +1,8 @@
-import type { InwardPin } from './inward-pin';
-import type { OutwardPin } from './outward-pin';
+import type { Pin } from './pin';
 import type { Simulator } from './simulator';
 
-export type InputPin = InwardPin;
-export type OutputPin = OutwardPin;
+export type InputPin = Pin;
+export type OutputPin = Pin;
 
 export type InputPins = InputPin[];
 export type OutputPins = OutputPin[];
@@ -37,5 +36,5 @@ export class Chip {
 		}
 	}
 
-	process(simulator: Simulator) {}
+	process(simulator: Simulator) { }
 }

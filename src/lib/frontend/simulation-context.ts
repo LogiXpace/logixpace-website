@@ -112,7 +112,7 @@ export class SimulationContext<T> {
 	addInput(param: Omit<InputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
 		const input = new Input({
 			...param,
-			namedPin: new NamedPin({ id: this.adapter.createOutwardPin(powerState), name, powerState })
+			namedPin: new NamedPin({ id: this.adapter.createPin(powerState), name, powerState })
 		});
 		this.entityManager.insertInput(input);
 		this.queryAll();
@@ -122,7 +122,7 @@ export class SimulationContext<T> {
 	addOutput(param: Omit<OutputProps<T>, 'namedPin'>, name: string, powerState: PowerState) {
 		const output = new Output({
 			...param,
-			namedPin: new NamedPin({ id: this.adapter.createInwardPin(powerState), name, powerState })
+			namedPin: new NamedPin({ id: this.adapter.createPin(powerState), name, powerState })
 		});
 		this.entityManager.insertOutput(output);
 		this.queryAll();
@@ -168,7 +168,7 @@ export class SimulationContext<T> {
 		for (let i = 0; i < inputNames.length; i++) {
 			inputPins[i] = this.addChipPin({
 				namedPin: new NamedPin({
-					id: this.adapter.createInwardPin(POWER_STATE_LOW),
+					id: this.adapter.createPin(POWER_STATE_LOW),
 					name: inputNames[i],
 					powerState: POWER_STATE_LOW
 				})
@@ -180,7 +180,7 @@ export class SimulationContext<T> {
 		for (let i = 0; i < outputNames.length; i++) {
 			outputPins[i] = this.addChipPin({
 				namedPin: new NamedPin({
-					id: this.adapter.createOutwardPin(POWER_STATE_LOW),
+					id: this.adapter.createPin(POWER_STATE_LOW),
 					name: outputNames[i],
 					powerState: POWER_STATE_LOW
 				})

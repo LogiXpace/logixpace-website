@@ -4,8 +4,6 @@ import { POWER_STATE_LOW, type PowerState } from './power-state';
 import { Simulator } from './simulator';
 import type { BuiltinChip } from './builtin-chip';
 import type { InputPins, OutputPins } from './chip';
-import { InwardPin } from './inward-pin';
-import { OutwardPin } from './outward-pin';
 
 /**
  *
@@ -22,10 +20,10 @@ export function expectBuiltinChipOutputCorrectly<T>(
 
 	for (let i = 0; i < inputPowerStates.length; i++) {
 		const powerState = inputPowerStates[i];
-		inputPins.push(new InwardPin(powerState));
+		inputPins.push(new Pin(powerState));
 	}
 
-	const o = new OutwardPin(POWER_STATE_LOW);
+	const o = new Pin(POWER_STATE_LOW);
 	new builtinChipConstructor(inputPins, [o]);
 
 	const simulator = new Simulator();

@@ -17,16 +17,6 @@ export class Adapter<T> {
 		throw new Error('Not implemented');
 	}
 
-	createInwardPin(state: PowerState): T {
-		// TODO: implement in the child class
-		throw new Error('Not implemented');
-	}
-
-	createOutwardPin(state: PowerState): T {
-		// TODO: implement in the child class
-		throw new Error('Not implemented');
-	}
-
 	getPowerState(id: T): PowerState {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');

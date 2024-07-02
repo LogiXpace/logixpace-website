@@ -41,19 +41,14 @@ export class Pin {
 	 * @param pin - the pin to connect to
 	 */
 	connectPin(simulator: Simulator, pin: Pin) {
-		pin.connectedPins.add(this);
 		this.connectedPins.add(pin);
 
 		// increment the number of connectors on the pin.
 		pin.maximumInfluencers++;
-		this.maximumInfluencers++;
 
 		// change influx based on this power state.
 		pin.changeInflux(this.powerState);
 		pin.update(this.powerState, simulator);
-
-		this.changeInflux(pin.powerState);
-		this.update(pin.powerState, simulator);
 	}
 
 	/**
@@ -64,7 +59,6 @@ export class Pin {
 	 */
 	disconnectPin(simulator: Simulator, pin: Pin) {
 		this.connectedPins.delete(pin);
-		pin.connectedPins.delete(this);
 
 		// decrement the number of connectors on the pin.
 		pin.maximumInfluencers--;
@@ -73,18 +67,8 @@ export class Pin {
 			pin.influx--;
 		}
 
-		this.maximumInfluencers--;
-
-		if (pin.powerState === POWER_STATE_HIGH) {
-			this.influx--;
-		}
-
 		if (pin.isUpdatable(POWER_STATE_LOW)) {
 			simulator.queuePin(pin);
-		}
-
-		if (this.isUpdatable(POWER_STATE_LOW)) {
-			simulator.queuePin(this);
 		}
 	}
 
