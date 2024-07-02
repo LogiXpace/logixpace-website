@@ -6,7 +6,7 @@ import type { Simulator } from '../simulator';
 
 export class BuiltinNotChip extends BuiltinChip {
 	constructor(inputPins: InputPins, outputPins: OutputPins) {
-		super(inputPins, 1, outputPins, 1);
+		super(inputPins, 1, outputPins, 1, 'NOT');
 	}
 
 	process(simulator: Simulator) {

@@ -7,18 +7,40 @@ export type OutputPin = Pin;
 export type InputPins = InputPin[];
 export type OutputPins = OutputPin[];
 
+export type ChipType =
+	| 'AND'
+	| 'OR'
+	| 'NOT'
+	| 'XOR'
+	| 'NAND'
+	| 'NOR'
+	| 'XNOR'
+	| 'MUX2'
+	| 'DEMUX2'
+	| 'DEMUX4'
+	| 'DEMUX8'
+	| 'DEMUX16'
+	| 'MUX4'
+	| 'MUX8'
+	| 'MUX16'
+	| 'CUSTOM'
+	| 'STATIC';
+
 export class Chip {
 	inputPins: InputPins;
 	outputPins: OutputPins;
 	inputLength: number;
 	outputLength: number;
+	type: ChipType;
 
 	constructor(
 		inputPins: InputPins,
 		inputLength: number,
 		outputPins: OutputPins,
-		outputLength: number
+		outputLength: number,
+		type: ChipType
 	) {
+		this.type = type;
 		this.inputPins = inputPins;
 		this.inputLength = inputLength;
 

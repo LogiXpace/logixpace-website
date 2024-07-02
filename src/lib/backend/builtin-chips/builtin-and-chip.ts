@@ -6,7 +6,7 @@ import type { Simulator } from '../simulator';
 
 export class BuiltinAndChip extends BuiltinChip {
 	constructor(inputPins: InputPins, outputPins: OutputPins) {
-		super(inputPins, 2, outputPins, 1);
+		super(inputPins, 2, outputPins, 1, 'AND');
 	}
 
 	static numberOfInputs() {
