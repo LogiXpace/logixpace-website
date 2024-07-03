@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { BoxCollider, LineCollider } from './colliders';
 import { Vector2D } from './vector2d';
 
-describe.only('collider test', () => {
+describe('collider test', () => {
 	describe('should expect collision between', () => {
 		test('line and line (perpendicular)', () => {
 			const line1 = new LineCollider(new Vector2D(), new Vector2D(2, 2), 1);
@@ -27,36 +27,14 @@ describe.only('collider test', () => {
 
 		test('box and line (non-parallel)', () => {
 			const box = new BoxCollider(new Vector2D(0, 1), 1, 1);
-
-			// const edge1 = new LineCollider(new Vector2D(), new Vector2D(0, 1), 1);
-			// const edge2 = new LineCollider(edge1.endPosition, new Vector2D(1, 1), 1);
-			// const edge3 = new LineCollider(edge2.endPosition, new Vector2D(1, 0), 1);
-			// const edge4 = new LineCollider(edge3.endPosition, new Vector2D(), 1);
-
 			const line = new LineCollider(new Vector2D(-2, 0), new Vector2D(5, 1), 1);
-
-			// expect(edge1.isColliding(line)).toStrictEqual(true);
-			// expect(edge2.isColliding(line)).toStrictEqual(false);
-			// expect(edge3.isColliding(line)).toStrictEqual(true);
-			// expect(edge4.isColliding(line)).toStrictEqual(false);
 
 			expect(box.isColliding(line)).toStrictEqual(false);
 		});
 
 		test('box and line (insisde)', () => {
 			const box = new BoxCollider(new Vector2D(0, 0), 500, 1000);
-
-			// const edge1 = new LineCollider(new Vector2D(), new Vector2D(0, 1), 1);
-			// const edge2 = new LineCollider(edge1.endPosition, new Vector2D(1, 1), 1);
-			// const edge3 = new LineCollider(edge2.endPosition, new Vector2D(1, 0), 1);
-			// const edge4 = new LineCollider(edge3.endPosition, new Vector2D(), 1);
-
 			const line = new LineCollider(new Vector2D(-1, 5), new Vector2D(5, -1), 1);
-
-			// expect(edge1.isColliding(line)).toStrictEqual(true);
-			// expect(edge2.isColliding(line)).toStrictEqual(false);
-			// expect(edge3.isColliding(line)).toStrictEqual(true);
-			// expect(edge4.isColliding(line)).toStrictEqual(false);
 
 			expect(box.isColliding(line)).toStrictEqual(true);
 		});
