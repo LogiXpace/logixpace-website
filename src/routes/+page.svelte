@@ -1,3 +1,8 @@
+<script>
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+</script>
+
 <nav class="fixed w-full bg-transparent py-2 text-gray-400 shadow-lg backdrop-blur-xl">
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex h-16 items-center justify-between">
@@ -25,7 +30,7 @@
 						>features</a
 					>
 				</li> -->
-				<li>
+				<!-- <li>
 					<a
 						href="#contact"
 						class="hover-transition rounded-md border-2 border-transparent px-4 py-2 text-lg font-medium hover:text-blue-500"
@@ -34,13 +39,13 @@
 				</li>
 				<li>
 					<a
-						href="/blog"
+						href="/#blog"
 						class="hover: hover-transition rounded-md border-2 border-blue-500 px-4 py-2 text-lg font-medium hover:bg-blue-500 hover:text-white"
 						>Blog</a
 					>
-				</li>
+				</li> -->
 			</ul>
-			<div class="flex space-x-4">
+			<!-- <div class="flex space-x-4">
 				<a
 					href="/login"
 					class="hover-transition rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-400"
@@ -51,10 +56,26 @@
 					class="hover-transition rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-400"
 					>Sign Up</a
 				>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </nav>
+
+<!-- 
+<nav
+	class="fixed bottom-0 flex items-center justify-center space-x-2 rounded-full border bg-background px-4 py-3"
+>
+	<div
+		class="inline-flex cursor-pointer rounded-full border px-5 py-3 text-lg transition-all duration-300 hover:scale-110 hover:border-0 hover:bg-primary hover:text-white hover:shadow-lg hover:shadow-primary"
+	>
+		Home
+	</div>
+	<div
+		class="inline-flex cursor-pointer rounded-full border px-5 py-3 text-lg transition-all duration-300 hover:scale-110 hover:border-0 hover:bg-primary hover:text-white hover:shadow-lg hover:shadow-primary"
+	>
+		About
+	</div>
+</nav> -->
 
 <section
 	id="home"
@@ -64,12 +85,19 @@
 	<p class="mt-4 text-lg md:text-xl">
 		An interactive way to learn and experiment with logic gates.
 	</p>
+	<p class="mt-4 text-lg font-bold md:text-3xl">We are launching soon, stay tuned!</p>
 	<div class="mt-6 flex justify-center space-x-4">
-		<a
-			href="/simulator"
-			class="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-400"
-			>Launch Simulator</a
-		>
+		<Input type="text" placeholder="Drop your email here" class="min-w-96 bg-background" />
+		<Button class="flex items-center justify-center space-x-2">
+			<i class="fas fa-paper-plane"></i>
+			<span>Get Notified</span>
+		</Button>
+	</div>
+	<p class="mt-4 text-lg font-bold md:text-xl">
+		btw, you can get early access to the simulator here:
+	</p>
+	<div class="mt-6 flex justify-center space-x-4">
+		<Button href="/simulator">Launch Simulator</Button>
 	</div>
 </section>
 
@@ -92,68 +120,6 @@
 	<p class="mx-auto mt-4 max-w-3xl text-lg md:text-xl">
 		Join our community of learners and start exploring the fascinating world of digital logic today!
 	</p>
-
-	<p class="mx-auto mt-6 text-lg md:text-xl">
-		<a
-			href="/signup"
-			class="hover-transition rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-400"
-			>Join now!</a
-		>
-	</p>
-</section>
-
-<!-- Features Section -->
-<!-- <div id="features" class="min-h-screen py-20">
-	<section class=""></section>
-</div> -->
-
-<!-- Contact Section -->
-<section id="contact" class="dotted-grid py-4 text-center text-white">
-	<!-- <h2 class="glow text-3xl font-bold md:text-4xl">Contact Us</h2> -->
-	<p class="mt-4 text-lg md:text-xl">
-		Reach out to us at <a
-			href="mailto:logicalalphaprogrammer@gmail.com"
-			class="text-blue-400 hover:text-blue-600">logicalalphaprogrammer@gmail.com</a
-		>
-	</p>
-
-	<form class="mx-auto mt-8 max-w-lg rounded-lg bg-gray-900 p-6 shadow-md">
-		<div class="mb-4">
-			<input
-				id="name"
-				type="text"
-				placeholder="Name"
-				class="focus:shadow-outline w-full appearance-none rounded border bg-gray-800 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
-				required
-			/>
-		</div>
-		<div class="mb-4">
-			<input
-				id="email"
-				type="email"
-				placeholder="Email"
-				class="focus:shadow-outline w-full appearance-none rounded border bg-gray-800 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
-				required
-			/>
-		</div>
-		<div class="mb-4">
-			<textarea
-				id="message"
-				placeholder="Message"
-				class="focus:shadow-outline w-full appearance-none rounded border bg-gray-800 px-3 py-2 leading-tight text-gray-300 shadow focus:outline-none"
-				rows="4"
-				required
-			></textarea>
-		</div>
-		<div class="flex items-center justify-between">
-			<button
-				type="submit"
-				class="focus:shadow-outline rounded bg-blue-600 px-4 py-2 font-bold text-white transition-all duration-300 hover:bg-blue-400 focus:outline-none"
-			>
-				Send
-			</button>
-		</div>
-	</form>
 </section>
 
 <!-- 
