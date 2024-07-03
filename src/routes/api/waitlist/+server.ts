@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
       return new Response(valid.issues[0].message, { status: 400 });
     }
 
-    db.insert(users).values({ email: valid.output }).execute();
+    await db.insert(users).values({ email: valid.output });
 
     return new Response("succesfully submitted", { status: 200 });
   } catch (error: any) {
