@@ -235,13 +235,27 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
 			startPosition,
 			endPosition,
 			start,
+			direction: wireSerialized.direction,
 			end
 		});
 
 		start.addWire(wire);
 		end.addWire(wire);
 
-		simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+
+		switch (wireSerialized.direction) {
+			case 'start':
+				simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+				break;
+			case 'end':
+				simulationContext.adapter.connect(end.pinId, wire.start.pinId);
+				break;
+			case 'both':
+				simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+				simulationContext.adapter.connect(end.pinId, wire.start.pinId);
+				break;
+		}
+
 		simulationContext.entityManager.insertWire(wire);
 	}
 

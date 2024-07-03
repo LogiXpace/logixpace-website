@@ -36,6 +36,7 @@ export class SimulationCreatingWireManager<T> {
 		const halfWire1 = new Wire({
 			start: wirePoint,
 			startPosition: wirePoint.position,
+			direction: 'start',
 			end: wire.end,
 			endPosition: wire.endPosition
 		});
@@ -123,6 +124,7 @@ export class SimulationCreatingWireManager<T> {
 		const wire = new Wire({
 			start: wireEntity,
 			startPosition: position,
+			direction: 'start',
 			end: this.wirePointPending,
 			endPosition: this.wirePointPending.position
 		});

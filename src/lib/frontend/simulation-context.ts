@@ -284,6 +284,74 @@ export class SimulationContext<T> {
 				);
 				navigator.clipboard.writeText(JSON.stringify(json));
 				console.log(json);
+			} else if (this.keyboardInput.isKeyPressed('c')) {
+				const allPinIds: T[] = [];
+				const allChipIds: T[] = [];
+				let inputPinIds: T[] = [];
+				let outputPinIds: T[] = [];
+
+				for (const chip of this.selectionManager.chips) {
+					allChipIds.push(chip.id);
+
+					for (let i = 0; i < chip.inputPins.length; i++) {
+						const inputPin = chip.inputPins[i];
+						allPinIds.push(inputPin.namedPin.id);
+					}
+
+					for (let i = 0; i < chip.outputPins.length; i++) {
+						const outputPin = chip.outputPins[i];
+						allPinIds.push(outputPin.namedPin.id);
+					}
+				}
+
+				for (const input of this.selectionManager.inputs) {
+					allPinIds.push(input.namedPin.id);
+					inputPinIds.push(input.namedPin.id);
+				}
+
+				for (const output of this.selectionManager.outputs) {
+					allPinIds.push(output.namedPin.id);
+					outputPinIds.push(output.namedPin.id);
+				}
+
+				this.adapter.addCustomChip(
+					'custom',
+					allPinIds,
+					allChipIds,
+					inputPinIds,
+					outputPinIds
+				);
+
+				inputPinIds = new Array(inputPinIds.length);
+				outputPinIds = new Array(outputPinIds.length);
+
+				const chipId = this.adapter.createCustomChip(
+					'custom',
+					inputPinIds,
+					outputPinIds
+				);
+
+				if (chipId === undefined) {
+					return;
+				}
+
+				const chip = new Chip({
+					color: new RGB(0, 0, 0),
+					id: chipId,
+					inputPins: inputPinIds.map((id) => new ChipPin({ position: new Vector2D(), direction: DIRECTION.LEFT, namedPin: new NamedPin({ id, name: 'input', powerState: this.adapter.getPowerState(id) }) })),
+					outputPins: outputPinIds.map((id) => new ChipPin({ position: new Vector2D(), direction: DIRECTION.RIGHT, namedPin: new NamedPin({ id, name: 'output', powerState: this.adapter.getPowerState(id) }) })),
+					simulationContext: this,
+					textWidth: 100,
+					type: 'custom',
+					name: 'custom',
+					position: this.screenVectorToWorldVector(this.mouseInput.movePosition)
+				})
+
+				this.entityManager.insertChip(chip);
+				this.queryAll();
+
+				this.selectionManager.deselectAll();
+				this.selectionManager.selectChip(chip);
 			}
 		}
 
@@ -292,6 +360,7 @@ export class SimulationContext<T> {
 				importJSON(text, this);
 			});
 		}
+
 	}
 
 	handleContextMenu(e: MouseEvent) {
@@ -652,7 +721,7 @@ export class SimulationContext<T> {
 					y,
 					gridRadius,
 					new CanvasStyle({
-						fillColor: new RGB(25, 25, 25, 0.2)
+						fillColor: new RGB(255, 255, 255, 0.2)
 					})
 				);
 			}

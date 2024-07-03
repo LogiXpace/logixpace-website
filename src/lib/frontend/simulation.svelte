@@ -12,6 +12,8 @@
 	import { SimulationContext } from './simulation-context';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import SimulationContextMenu from './simulation-context-menu.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		offset = new Vector2D(),
@@ -27,13 +29,16 @@
 	let FPS = $state(0);
 
 	onMount(() => {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		canvas.width = 0;
+		canvas.height = 0;
 
 		const ctx = canvas.getContext('2d');
 		if (ctx === null) {
 			throw new Error('Could not get canvas context');
 		}
+
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 
 		function handleResize() {
 			canvas.width = window.innerWidth;
@@ -80,7 +85,9 @@
 </script>
 
 <div class="h-full w-full" bind:this={simulationElement}>
-	<canvas bind:this={canvas}></canvas>
+	<SimulationContextMenu {simulationContext}>
+		<canvas bind:this={canvas}></canvas>
+	</SimulationContextMenu>
 	<div
 		class="fixed left-0 top-0 m-2 flex flex-col space-y-2 *:max-w-[20ch] *:text-xs *:font-semibold"
 	>
@@ -106,5 +113,14 @@
 			Simulation Step
 			<Input placeholder="Simulation Step" bind:value={simulationStep} type="number" min="1" />
 		</Label>
+		{#if simulationStep === 0}
+			<Button
+				onclick={() => {
+					simulationContext?.adapter.step();
+				}}
+			>
+				Step
+			</Button>
+		{/if}
 	</div>
 </div>

@@ -15,10 +15,12 @@ export interface WireEntity<T> {
 	removeWire(wire: Wire<T>): void;
 }
 
+export type WireDirection = 'start' | 'end' | 'both';
+
 export interface WireProps<T> {
 	startPosition: Vector2D;
 	endPosition: Vector2D;
-
+	direction: WireDirection;
 	start: WireEntity<T>;
 	end: WireEntity<T>;
 }
@@ -26,6 +28,7 @@ export interface WireProps<T> {
 export class Wire<T> {
 	startPosition: Vector2D;
 	endPosition: Vector2D;
+	direction: WireDirection;
 
 	start: WireEntity<T>;
 	end: WireEntity<T>;
@@ -33,9 +36,10 @@ export class Wire<T> {
 	dispatcher = new SimulationEventDispatcher();
 	collider: LineCollider;
 
-	constructor({ startPosition, endPosition, start, end }: WireProps<T>) {
+	constructor({ startPosition, endPosition, start, end, direction }: WireProps<T>) {
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
+		this.direction = direction;
 
 		this.start = start;
 		this.end = end;
@@ -61,7 +65,9 @@ export class Wire<T> {
 			this.endPosition.y,
 			new CanvasStyle({
 				strokeColor: this.activated ? DEFUALTS.ACTIVATED_COLOR : DEFUALTS.UNACTIVATED_COLOR,
-				lineWidth: DEFUALTS.WIRE_WIDTH
+				lineWidth: DEFUALTS.WIRE_WIDTH,
+				lineDash: [5],
+				lineDashOffset: this.direction === 'start' ? -currTime * 0.05 : currTime * 0.05
 			})
 		);
 	}

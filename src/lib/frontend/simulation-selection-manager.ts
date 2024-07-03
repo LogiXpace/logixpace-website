@@ -6,6 +6,7 @@ import { calculateBoxFromTwoPoint } from '$lib/helpers/shape';
 import { Vector2D } from '$lib/helpers/vector2d';
 import type { Chip } from './chip';
 import type { ChipPin } from './chip-pin';
+import { DEFUALTS } from './defaults';
 import type { Input } from './input';
 import type { IO } from './io';
 import type { Output } from './output';
@@ -206,7 +207,7 @@ export class SimulationSelectionManager<T> {
 			this.collider.width,
 			this.collider.height,
 			new CanvasStyle({
-				strokeColor: new RGB(0, 0, 0, 1),
+				strokeColor: DEFUALTS.SELECTION_COLOR,
 				lineWidth: 1,
 				lineDash: [3, 3]
 			})

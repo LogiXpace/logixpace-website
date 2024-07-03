@@ -66,4 +66,19 @@ export class Adapter<T> {
 		// TODO: implement in the child class
 		throw new Error('Not implemented');
 	}
+
+	step(): void {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
+	addCustomChip(name: string, allPinIds: T[], allChipIds: T[], inputPinIds: T[], outputPinIds: T[]) {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
+
+	createCustomChip(name: string, inputPinIds: T[], outputPinIds: T[]): T | undefined {
+		// TODO: implement in the child class
+		throw new Error('Not implemented');
+	}
 }
