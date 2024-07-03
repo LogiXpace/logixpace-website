@@ -2,14 +2,20 @@
 	import { BackendAdapter } from '$lib/frontend/backend-adapter';
 	import type { SimulationContext } from '$lib/frontend/simulation-context';
 	import Simulation from '$lib/frontend/simulation.svelte';
-	import { Vector2D } from '$lib/helpers/vector2d';
-	import AddEntitiesContextMenu from './add-entities-context-menu.svelte';
 
 	let simulationContext: SimulationContext<number> | undefined = $state(undefined);
+
+	$effect(() => {
+		if (simulationContext === undefined) {
+			return;
+		}
+	});
 </script>
 
+<svelte:head>
+	<title>Simulator</title>
+</svelte:head>
+
 <div class="h-screen w-screen overflow-hidden">
-	<AddEntitiesContextMenu {simulationContext}>
-		<Simulation scale={1} adapter={new BackendAdapter(1)} bind:simulationContext />
-	</AddEntitiesContextMenu>
+	<Simulation scale={1} adapter={new BackendAdapter(1)} bind:simulationContext />
 </div>
