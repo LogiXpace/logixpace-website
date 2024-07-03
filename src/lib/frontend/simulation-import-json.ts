@@ -45,7 +45,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
 		if (namedPin === undefined) {
 			const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
 			namedPin = new NamedPin({
-				id: simulationContext.entityManager.adapter.createOutwardPin(namedPinSerialized.powerState),
+				id: simulationContext.entityManager.adapter.createPin(namedPinSerialized.powerState),
 				name: namedPinSerialized.name,
 				powerState: namedPinSerialized.powerState
 			});
@@ -79,7 +79,7 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
 		if (namedPin === undefined) {
 			const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
 			namedPin = new NamedPin({
-				id: simulationContext.entityManager.adapter.createInwardPin(namedPinSerialized.powerState),
+				id: simulationContext.entityManager.adapter.createPin(namedPinSerialized.powerState),
 				name: namedPinSerialized.name,
 				powerState: namedPinSerialized.powerState
 			});
@@ -114,8 +114,8 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
 			const namedPinSerialized = namedPinsSerialized[namedPinSerialzedIndex];
 			namedPin = new NamedPin({
 				id: input
-					? simulationContext.entityManager.adapter.createInwardPin(namedPinSerialized.powerState)
-					: simulationContext.entityManager.adapter.createOutwardPin(namedPinSerialized.powerState),
+					? simulationContext.entityManager.adapter.createPin(namedPinSerialized.powerState)
+					: simulationContext.entityManager.adapter.createPin(namedPinSerialized.powerState),
 				name: namedPinSerialized.name,
 				powerState: namedPinSerialized.powerState
 			});
@@ -235,13 +235,27 @@ export function importJSON<T>(json: string, simulationContext: SimulationContext
 			startPosition,
 			endPosition,
 			start,
+			direction: wireSerialized.direction,
 			end
 		});
 
 		start.addWire(wire);
 		end.addWire(wire);
 
-		simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+
+		switch (wireSerialized.direction) {
+			case 'start':
+				simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+				break;
+			case 'end':
+				simulationContext.adapter.connect(end.pinId, wire.start.pinId);
+				break;
+			case 'both':
+				simulationContext.adapter.connect(start.pinId, wire.end.pinId);
+				simulationContext.adapter.connect(end.pinId, wire.start.pinId);
+				break;
+		}
+
 		simulationContext.entityManager.insertWire(wire);
 	}
 

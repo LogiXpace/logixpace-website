@@ -2,7 +2,7 @@
 	import { Vector2D } from '$lib/helpers/vector2d';
 	import type { Snippet } from 'svelte';
 
-	export type AddEntitiesContextMenuProps<T> = {
+	export type SiumaltionContextMenuProps<T> = {
 		simulationContext: SimulationContext<T>;
 		children: Snippet;
 	};
@@ -15,12 +15,11 @@
 	import type { SimulationContext } from '$lib/frontend/simulation-context';
 	import { RGB } from '$lib/helpers/color';
 	import { DIRECTION } from '$lib/helpers/direction';
-	import { POWER_STATE_LOW } from '$lib/frontend/state';
-	import { POWER_STATE_HIGH } from '$lib/backend/power-state';
+	import { POWER_STATE_LOW, POWER_STATE_HIGH } from '$lib/frontend/state';
 
-	type $$Props = AddEntitiesContextMenuProps<T>;
+	type $$Props = SiumaltionContextMenuProps<T>;
 
-	let { children, simulationContext }: AddEntitiesContextMenuProps<T> = $props();
+	let { children, simulationContext }: SiumaltionContextMenuProps<T> = $props();
 
 	let position = $state(new Vector2D());
 	let open = $state(false);
@@ -34,7 +33,6 @@
 
 			// stop any propagation, so other context menus don't open
 			e.stopPropagation();
-			e.stopImmediatePropagation();
 		}}
 	>
 		{@render children()}
@@ -51,7 +49,7 @@
 							simulationContext.addChip('and', ['a', 'b'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'AND',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -63,7 +61,7 @@
 							simulationContext.addChip('nand', ['a', 'b'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'NAND',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -75,7 +73,7 @@
 							simulationContext.addChip('or', ['a', 'b'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'OR',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -87,7 +85,7 @@
 							simulationContext.addChip('nor', ['a', 'b'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'NOR',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -99,7 +97,7 @@
 							simulationContext.addChip('xor', ['a', 'b'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'XOR',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -111,7 +109,7 @@
 							simulationContext.addChip('not', ['a'], ['o'], {
 								position: simulationContext.screenVectorToWorldVector(position),
 								name: 'NOT',
-								color: new RGB(0, 0, 0)
+								color: new RGB(25, 25, 25)
 							});
 						}}
 					>
@@ -125,8 +123,8 @@
 							open = false;
 							simulationContext.addInput(
 								{
-									position,
-									color: new RGB(0, 0, 0)
+									position: simulationContext.screenVectorToWorldVector(position),
+									color: new RGB(25, 25, 25)
 								},
 								'input',
 								POWER_STATE_LOW
@@ -140,8 +138,8 @@
 							open = false;
 							simulationContext.addOutput(
 								{
-									position,
-									color: new RGB(0, 0, 0)
+									position: simulationContext.screenVectorToWorldVector(position),
+									color: new RGB(25, 25, 25)
 								},
 								'output',
 								POWER_STATE_LOW

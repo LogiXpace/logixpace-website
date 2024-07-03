@@ -82,7 +82,7 @@ export class IO<T> {
 		return this.namedPin.powerState === POWER_STATE_HIGH;
 	}
 
-	initEvents() {}
+	initEvents() { }
 
 	addWire(wire: Wire<T>) {
 		this.wires.push(wire);
@@ -257,7 +257,7 @@ export class IO<T> {
 				this.bound.width,
 				this.bound.height,
 				new CanvasStyle({
-					strokeColor: new RGB(0, 0, 0, 1),
+					strokeColor: DEFUALTS.SELECTION_COLOR,
 					lineWidth: 1,
 					lineDash: [3, 3]
 				})

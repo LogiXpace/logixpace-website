@@ -57,7 +57,7 @@ export class WirePoint<T> {
 		}
 	}
 
-	initEvents() {}
+	initEvents() { }
 
 	isCollidingMain(collider: Collider) {
 		return this.collider.isColliding(collider);
@@ -118,7 +118,7 @@ export class WirePoint<T> {
 				this.bound.position.y,
 				this.bound.radius,
 				new CanvasStyle({
-					strokeColor: new RGB(0, 0, 0),
+					strokeColor: DEFUALTS.SELECTION_COLOR,
 					lineWidth: 1,
 					lineDash: [3, 3]
 				})

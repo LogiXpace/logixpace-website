@@ -4,16 +4,15 @@ import {
 	BuiltinNOrChip,
 	BuiltinNotChip,
 	BuiltinOrChip
-} from '$lib/backend/builtin-chips';
-import { BuiltinXOrChip } from '$lib/backend/builtin-chips/builtin-xor-chip';
-import type { Chip } from '$lib/backend/chip';
-import { OutwardPin } from '$lib/backend/outward-pin';
-import { InwardPin } from '$lib/backend/inward-pin';
-import { Pin } from '$lib/backend/pin';
-import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/backend/power-state';
-import { Simulator } from '$lib/backend/simulator';
+} from '$lib/core/builtin-chips';
+import { BuiltinXOrChip } from '$lib/core/builtin-chips/builtin-xor-chip';
+import type { Chip } from '$lib/core/chip';
+import { Pin } from '$lib/core/pin';
+import { POWER_STATE_HIGH, POWER_STATE_LOW } from '$lib/core/power-state';
+import { Simulator } from '$lib/core/simulator';
 import { FreeList } from '$lib/helpers/free-list';
 import { Adapter } from './adapter';
+import { BackendAdapterCustomChipDatabase } from './backend-adapter-custom-chip-database';
 import type { ChipType } from './chip-types';
 import {
 	type PowerState as FrontendPowerState,
@@ -25,6 +24,7 @@ export class BackendAdapter extends Adapter<number> {
 	private pins = new FreeList<Pin>();
 	private chips = new FreeList<Chip>();
 	private simulationStep = 1;
+	private customChipDatabase = new BackendAdapterCustomChipDatabase();
 
 	constructor(simulationStep: number) {
 		super('BackendAdapter');
@@ -33,20 +33,6 @@ export class BackendAdapter extends Adapter<number> {
 
 	createPin(state: FrontendPowerState): number {
 		const pin = new Pin(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW);
-		return this.pins.insert(pin);
-	}
-
-	createOutwardPin(state: FrontendPowerState): number {
-		const pin = new OutwardPin(
-			state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW
-		);
-		return this.pins.insert(pin);
-	}
-
-	createInwardPin(state: FrontendPowerState): number {
-		const pin = new InwardPin(
-			state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW
-		);
 		return this.pins.insert(pin);
 	}
 
@@ -65,7 +51,7 @@ export class BackendAdapter extends Adapter<number> {
 			throw new Error('Invalid pin ID');
 		}
 
-		pin.update(state, this.simulator);
+		pin.update(state === FRONTEND_POWER_STATE_HIGH ? POWER_STATE_HIGH : POWER_STATE_LOW, this.simulator);
 	}
 
 	connect(start: number, end: number): void {
@@ -122,7 +108,7 @@ export class BackendAdapter extends Adapter<number> {
 		const outputPins = new Array(outputIds.length);
 		for (let i = 0; i < outputIds.length; i++) {
 			const pin = this.pins.get(outputIds[i]);
-			if (typeof pin === 'number' || pin === undefined || !(pin instanceof OutwardPin)) {
+			if (typeof pin === 'number' || pin === undefined) {
 				throw new Error('Invalid output pin ID');
 			}
 
@@ -180,11 +166,89 @@ export class BackendAdapter extends Adapter<number> {
 		this.simulator.simulate(this.simulationStep);
 	}
 
+	step() {
+		this.simulator.step();
+	}
+
 	setSimulationStep(step: number): void {
 		this.simulationStep = step;
 	}
 
 	getSimulationStep(): number {
 		return this.simulationStep;
+	}
+
+	addCustomChip(name: string, allPinIds: number[], allChipIds: number[], inputPinIds: number[], outputPinIds: number[]) {
+		const allPins = new Array<Pin>(allPinIds.length);
+		const allChips = new Array<Chip>(allChipIds.length);
+
+		for (let i = 0; i < allPinIds.length; i++) {
+			const pin = this.pins.get(allPinIds[i]);
+			if (typeof pin === 'number' || pin === undefined) {
+				throw new Error('Invalid pin ID');
+			}
+
+			allPins[i] = pin;
+		}
+
+		for (let i = 0; i < inputPinIds.length; i++) {
+			const inputPinId = inputPinIds[i];
+			const pin = this.pins.get(inputPinId);
+			if (typeof pin === 'number' || pin === undefined) {
+				throw new Error('Invalid input pin ID ' + inputPinId);
+			}
+
+			const index = allPins.indexOf(pin);
+			if (index === -1) {
+				throw new Error('Invalid input pin ID ' + inputPinId);
+			}
+
+			inputPinIds[i] = index;
+		}
+
+		for (let i = 0; i < outputPinIds.length; i++) {
+			const outputPinId = outputPinIds[i];
+			const pin = this.pins.get(outputPinId);
+			if (typeof pin === 'number' || pin === undefined) {
+				throw new Error('Invalid output pin ID ' + outputPinId);
+			}
+
+			const index = allPins.indexOf(pin);
+			if (index === -1) {
+				throw new Error('Invalid output pin ID ' + outputPinId);
+			}
+
+			outputPinIds[i] = index;
+		}
+
+		for (let i = 0; i < allChips.length; i++) {
+			const chip = this.chips.get(allChipIds[i]);
+			if (typeof chip === 'number' || chip === undefined) {
+				throw new Error('Invalid chip ID');
+			}
+
+			allChips[i] = chip;
+		}
+
+		this.customChipDatabase.add(name, allPins, allChips, inputPinIds, outputPinIds);
+	}
+
+	createCustomChip(name: string, inputPinIds: number[], outputPinIds: number[]): number | undefined {
+		const chip = this.customChipDatabase.create(name, this.simulator);
+		if (chip === undefined) {
+			return undefined;
+		}
+
+		const chipId = this.chips.insert(chip);
+
+		for (let i = 0; i < chip.inputLength; i++) {
+			inputPinIds[i] = this.pins.insert(chip.inputPins[i]);
+		}
+
+		for (let i = 0; i < chip.outputLength; i++) {
+			outputPinIds[i] = this.pins.insert(chip.outputPins[i]);
+		}
+
+		return chipId;
 	}
 }

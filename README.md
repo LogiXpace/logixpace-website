@@ -6,12 +6,15 @@
 - [ ] fix zooming
 - [ ] fix bug when deleting chip, correcly dispose wires and reset the pins in the wire ponts
 - [ ] fix the position of creating a new entity when clicking on the context menu
+- [ ] make a genearal context menu
+- [ ] make the add context menu pop up whem pressing only c
 - [ ] add a chip context menu
 - [ ] add a io context menu
 - [ ] add a wire point context menu
 - [ ] add a wire context menu
 - [ ] load and save
 - [ ] make the simulation context ui theme align with the main color theme
+- [ ] make the direction of propagation of the wires normally unidirectional and bidirectional when opted for by the user.
 
 # DONE
 

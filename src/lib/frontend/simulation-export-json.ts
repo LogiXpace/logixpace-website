@@ -7,7 +7,7 @@ import { Input } from './input';
 import type { NamedPin } from './named-pin';
 import { Output } from './output';
 import type { PowerState } from './state';
-import type { Wire, WireEntity } from './wire';
+import type { Wire, WireDirection, WireEntity } from './wire';
 import { WirePoint } from './wire-point';
 
 export type InputSerialized = {
@@ -49,7 +49,7 @@ export type WireEntityType = 'input' | 'output' | 'wire-point' | 'chip-pin';
 export type WireSerialized = {
 	startType: WireEntityType;
 	startEntityIndex: number;
-
+	direction: WireDirection;
 	endType: WireEntityType;
 	endEntityIndex: number;
 };
@@ -85,7 +85,7 @@ export class SimulationExportJSON<T> {
 	private mapInputs: Map<Input<T>, number> = new Map();
 	private mapOutputs: Map<Output<T>, number> = new Map();
 
-	constructor() {}
+	constructor() { }
 
 	serializeNamedPin(namedPin: NamedPin<T>) {
 		if (this.mapNamedPins.has(namedPin)) {
@@ -215,7 +215,7 @@ export class SimulationExportJSON<T> {
 		const serializedWire: WireSerialized = {
 			startType,
 			startEntityIndex,
-
+			direction: wire.direction,
 			endType,
 			endEntityIndex
 		};

@@ -161,7 +161,7 @@ export class Chip<T> {
 				this.bound.width,
 				this.bound.height,
 				new CanvasStyle({
-					strokeColor: new RGB(0, 0, 0),
+					strokeColor: DEFUALTS.SELECTION_COLOR,
 					lineWidth: 1,
 					lineDash: [3, 3]
 				})
